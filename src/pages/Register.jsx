@@ -3,6 +3,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import api from '../utils/api';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import DomainDetails from '../component/detailsForm/DomainDetails';
 
 function Register() {
   const navigate = useNavigate();
@@ -44,10 +45,13 @@ function Register() {
 
     const res = await api.post('/api/auth/register', formData);
     toast.success('Register successful!');
-    navigate('/login');
+    if(formData.userRole === 'freelancer'){
+      navigate('/details');
+    }else{
+      navigate('/')
+    }
 
     console.log('Registration Data:', res);
-    // toast.success('Registration form submitted!');
   };
 
   return (

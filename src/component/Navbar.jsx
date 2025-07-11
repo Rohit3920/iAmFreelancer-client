@@ -1,16 +1,36 @@
-import React, { useState } from 'react';
-import { Search } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// Navbar component
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const Navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            setIsLoggedIn(true);
+        } else {
+            setIsLoggedIn(false);
+        }
+    }, [navigate]);
+
+    const handleLogout = () => {
+        localStorage.clear();
+
+        setIsLoggedIn(false);
+        toast.success('Logged out successfully!');
+        navigate('/login');
+    };
 
     return (
-        <nav className="bg-white w-full py-4 shadow-sm py-4 px-4 sm:px-6 lg:px-8 fixed top-0 left-0 z-10 ">
+        <nav className="bg-white w-full py-4 shadow-sm px-4 sm:px-6 lg:px-8 fixed top-0 left-0 z-10">
             <div className="container mx-auto flex justify-between items-center flex-wrap">
                 <div className="flex-shrink-0 mr-6">
-                    <a href="#" className="text-gray-800 text-3xl font-bold">
+                    <a href="/" className="text-gray-800 text-3xl font-bold">
                         <span className="text-blue-500">i<span className='text-orange-500'>Am</span>Freelancer</span><span className='text-orange-500'>.</span>
                     </a>
                 </div>
@@ -60,26 +80,41 @@ function Navbar() {
                 </div>
 
                 <div
-                    className={`${isMenuOpen ? 'block' : 'hidden'
-                        } w-full md:flex md:items-center md:w-auto mt-4 md:mt-0`}
+                    className={`${isMenuOpen ? 'block' : 'hidden'} w-full md:flex md:items-center md:w-auto mt-4 md:mt-0`}
                 >
                     <ul className="flex flex-col md:flex-row md:space-x-8 space-y-2 md:space-y-0 items-center">
-                        <li className='ml-3'>
+                        <li className='md:ml-3'>
                             <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out">
                                 Become a Freelancer
                             </a>
                         </li>
-                        <li>
-                            <a href="/login" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out">
-                                Login
-                            </a>
-                        </li>
-                        <li>
-                            <button className="px-5 py-2 border-2 border-blue-500 text-blue-500 rounded-md hover:bg-blue-500 hover:text-white transition duration-300 ease-in-out font-semibold"
-                            onClick={()=> Navigate("/register")}>
-                                Register
-                            </button>
-                        </li>
+
+                        {!isLoggedIn ? (
+                            <>
+                                <li>
+                                    <a href="/login" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out">
+                                        Login
+                                    </a>
+                                </li>
+                                <li>
+                                    <button
+                                        className="px-5 py-2 border-2 border-blue-500 text-blue-500 rounded-md hover:bg-blue-500 hover:text-white transition duration-300 ease-in-out font-semibold"
+                                        onClick={() => navigate("/register")}
+                                    >
+                                        Register
+                                    </button>
+                                </li>
+                            </>
+                        ) : (
+                            <li>
+                                <button
+                                    className="px-5 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300 ease-in-out font-semibold"
+                                    onClick={handleLogout}
+                                >
+                                    Logout
+                                </button>
+                            </li>
+                        )}
                     </ul>
                 </div>
             </div>

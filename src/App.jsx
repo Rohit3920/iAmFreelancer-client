@@ -9,6 +9,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgetPassword from './component/ForgetPassword'
 import Profile from './pages/Profile'
+import Details from './component/Details'
 
 function App() {
 
@@ -21,6 +22,7 @@ function App() {
           <Route element={<ProtectRoute />}>
             <Route path="/" element={<Home />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/details" element={<Details />} />
           </Route>
 
           <Route path="/login" element={<Login />} />
