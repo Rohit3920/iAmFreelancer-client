@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import api from '../../utils/api'
 
-function EducationDetails({ nextClick }) {
+function EducationDetails({ nextClick, myFormData }) {
+    console.log('EducationDetails component rendered with myFormData:', myFormData);
     const [formData, setFormData] = useState({
-        degree: '',
-        fieldOfStudy: '',
-        institutionName: '',
-        graduationYear: '',
-        cgpa: '',
-        description: '',
+        degree: myFormData.degree || '',
+        fieldOfStudy: myFormData.fieldOfStudy || '',
+        institutionName: myFormData.institutionName || '',
+        graduationYear: myFormData.graduationYear || '',
+        percentage: myFormData.percentage || '',
+        description: myFormData.description || '',
     });
 
     const handleChange = (e) => {
@@ -126,7 +127,7 @@ function EducationDetails({ nextClick }) {
                             type="text"
                             id="cgpa"
                             name="cgpa"
-                            value={formData.cgpa}
+                            value={formData.percentage}
                             onChange={handleChange}
                             placeholder="e.g., 3.8/4.0 or 90%"
                             className="mt-1 block max-w-xs px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out rounded-lg"

@@ -10,6 +10,7 @@ import Register from './pages/Register'
 import ForgetPassword from './component/ForgetPassword'
 import Profile from './pages/Profile'
 import Details from './component/Details'
+import UploadProfile from './component/detailsForm/UploadProfile'
 
 function App() {
 
@@ -23,6 +24,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/details" element={<Details />} />
+            <Route path="/upload-profile" element={<UploadProfile />} />
           </Route>
 
           <Route path="/login" element={<Login />} />

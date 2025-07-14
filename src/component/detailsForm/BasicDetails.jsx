@@ -1,25 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import api from '../../utils/api'
+import api from '../../utils/api';
 
-function BasicDetails({ nextClick }) {
+function BasicDetails({ nextClick, myFormData }) {
     const [formData, setFormData] = useState({
-        language: [],
-        contactNo: '',
-        gender: '',
-        dob: '',
+        language: myFormData.language || [],
+        contactNo: myFormData.contactNo || '',
+        gender: myFormData.gender || '',
+        dob: myFormData.dob || '',
     });
 
     const [currentLanguageInput, setCurrentLanguageInput] = useState('');
+
+    useEffect(() => {
+        setFormData({
+            language: myFormData.language || [],
+            contactNo: myFormData.contactNo || '',
+            gender: myFormData.gender || '',
+            dob: myFormData.dob || '',
+        });
+    }, [myFormData]);
 
     const handleAddLanguage = () => {
         const trimmedLang = currentLanguageInput.trim();
         if (trimmedLang) {
             if (!formData.language.includes(trimmedLang)) {
-                setFormData(prev => ({
+                setFormData((prev) => ({
                     ...prev,
-                    language: [...prev.language, trimmedLang]
+                    language: [...prev.language, trimmedLang],
                 }));
                 setCurrentLanguageInput('');
             } else {
@@ -31,9 +40,9 @@ function BasicDetails({ nextClick }) {
     };
 
     const handleRemoveLanguage = (langToRemove) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            language: prev.language.filter(lang => lang !== langToRemove)
+            language: prev.language.filter((lang) => lang !== langToRemove),
         }));
     };
 
@@ -46,10 +55,10 @@ function BasicDetails({ nextClick }) {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (formData.language.length === 0) {
@@ -69,24 +78,33 @@ function BasicDetails({ nextClick }) {
             return;
         }
 
-        console.log('Submitted Basic Details:', formData);
-        const done = toast.success('Basic details submitted successfully!');
-        const userId = localStorage.getItem('userId')
-        const res = api.put(`/api/auth/${userId}`, { basic: formData })
-        console.log("Submited Data",res)
-        if (done) {
-            nextClick()
+        try {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                toast.error('User not authenticated. Please log in again.');
+                return;
+            }
+            await api.put(`/api/auth/${userId}`, { basic: formData });
+            toast.success('Basic details submitted successfully!');
+            nextClick();
+        } catch (error) {
+            console.error('Error submitting basic details:', error);
+            toast.error('Failed to save basic details. Please try again.');
         }
     };
 
     return (
         <div className="min-h-screen w-1/2 text-left bg-gray-100 flex items-center justify-center p-4 sm:p-6 font-sans">
             <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-4xl border border-gray-200">
-                <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Basic Details</h2>
+                <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+                    Basic Details
+                </h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
-
                     <div>
-                        <label htmlFor="contactNo" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            htmlFor="contactNo"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             Contact Number <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -101,12 +119,16 @@ function BasicDetails({ nextClick }) {
                             className="mt-1 block max-w-xs px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out rounded-lg"
                             required
                         />
-                        <p className="mt-1 text-xs text-gray-500">Please enter a 10-digit number.</p>
+                        <p className="mt-1 text-xs text-gray-500">
+                            Please enter a 10-digit number.
+                        </p>
                     </div>
 
-
                     <div>
-                        <label htmlFor="languageInput" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            htmlFor="languageInput"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             Languages <span className="text-red-500">*</span>
                         </label>
                         <div className="flex flex-col sm:flex-row gap-3">
@@ -139,8 +161,19 @@ function BasicDetails({ nextClick }) {
                                         onClick={() => handleRemoveLanguage(lang)}
                                         className="ml-2 -mr-0.5 h-4 w-4 flex items-center justify-center rounded-full bg-blue-200 text-blue-700 hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                     >
-                                        <svg className="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        <svg
+                                            className="h-2.5 w-2.5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M6 18L18 6M6 6l12 12"
+                                            ></path>
                                         </svg>
                                     </button>
                                 </span>
@@ -157,7 +190,7 @@ function BasicDetails({ nextClick }) {
                                 <input
                                     type="radio"
                                     name="gender"
-                                    value="Male"
+                                    value={'Male'}
                                     checked={formData.gender === 'Male'}
                                     onChange={handleChange}
                                     className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
@@ -190,7 +223,10 @@ function BasicDetails({ nextClick }) {
                     </div>
 
                     <div>
-                        <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            htmlFor="dob"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             Date of Birth <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -212,7 +248,17 @@ function BasicDetails({ nextClick }) {
                     </button>
                 </form>
             </div>
-            <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+            <ToastContainer
+                position="bottom-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+            />
         </div>
     );
 }

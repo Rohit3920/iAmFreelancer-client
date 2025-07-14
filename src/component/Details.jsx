@@ -1,14 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import AddressDetails from './detailsForm/AddressDetails.jsx';
 import BasicDetails from './detailsForm/BasicDetails.jsx';
 import DomainDetails from './detailsForm/DomainDetails.jsx';
 import EducationDetails from './detailsForm/EducationDetails.jsx';
+import UploadProfile from './detailsForm/UploadProfile.jsx';
+import api from '../utils/api';
 
 function Detail() {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
+    const userId = localStorage.getItem('userId');
     const [allFormData, setAllFormData] = useState({
         basic: {},
         address: {},
@@ -16,7 +19,25 @@ function Detail() {
         DomainDetail: {},
     });
 
-    console.log(allFormData);
+    useEffect(() => {
+        if (userId) {
+            api.get(`/api/auth/${userId}`)
+                .then(response => {
+                    if (response.data) {
+                        setAllFormData(() => ({
+                            basic: response.data.basic[0] || {},
+                            address: response.data.address[0] || {},
+                            education: response.data.education[0] || {},
+                            DomainDetail: response.data.DomainDetail[0] || {},
+                        }));
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching profile picture:', err);
+                });
+        }
+    }, [userId]);
+
     const basicDetailsRef = useRef(null);
     const addressDetailsRef = useRef(null);
     const educationDetailsRef = useRef(null);
@@ -51,11 +72,17 @@ function Detail() {
                 </div>
                 <div className="flex items-center">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${currentStep >= 4 ? 'bg-blue-600' : 'bg-gray-400'}`}>4</div>
+                    <div className={`flex-1 h-1 w-20 mx-2 ${currentStep > 4 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+                </div>
+                <div className="flex items-center">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${currentStep >= 5 ? 'bg-blue-600' : 'bg-gray-400'}`}>5</div>
                 </div>
             </div>
 
             {currentStep === 1 && (
                 <BasicDetails
+                    myFormData={allFormData.basic}
+                    // setAllFormData={setAllFormData}
                     ref={basicDetailsRef}
                     nextClick={handleNextClick}
                 />
@@ -63,6 +90,8 @@ function Detail() {
 
             {currentStep === 2 && (
                 <AddressDetails
+                    myFormData={allFormData.address}
+                    // setAllFormData={setAllFormData}
                     ref={addressDetailsRef}
                     nextClick={handleNextClick}
                 />
@@ -70,6 +99,8 @@ function Detail() {
 
             {currentStep === 3 && (
                 <EducationDetails
+                    myFormData={allFormData.education}
+                    // setAllFormData={setAllFormData}
                     ref={educationDetailsRef}
                     nextClick={handleNextClick}
                 />
@@ -77,12 +108,22 @@ function Detail() {
 
             {currentStep === 4 && (
                 <DomainDetails
+                    myFormData={allFormData.DomainDetail}
+                    // setAllFormData={setAllFormData}
                     ref={domainDetailsRef}
                     nextClick={handleNextClick}
                 />
             )}
 
-            {currentStep > 4 && (
+            {currentStep === 5 && (
+                <UploadProfile
+                    ref={domainDetailsRef}
+                    nextClick={handleNextClick}
+                    prevClick={handlePreviousClick}
+                />
+            )}
+
+            {currentStep > 5 && (
                 <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-4xl border border-gray-200 text-center">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">All Forms Completed!</h2>
                     <p className="text-gray-600 mb-6">Thank you for providing your details. Your profile is now complete.</p>
@@ -105,7 +146,7 @@ function Detail() {
                 </div>
             )}
 
-            {currentStep <= 4 && (
+            {currentStep <= 5 && (
                 <div className="flex justify-between w-full max-w-4xl mt-6">
                     {currentStep > 1 && (
                         <button
@@ -116,14 +157,14 @@ function Detail() {
                             Previous
                         </button>
                     )}
-                    {currentStep === 1 && <div className="w-auto"></div>} {/* Spacer for step 1 */}
+                    {currentStep === 1 && <div className="w-auto"></div>}
 
                     <button
                         type="button"
                         onClick={handleNextClick}
                         className="py-2 px-6 bg-lime-600 text-white font-bold rounded-md shadow-lg hover:bg-lime-700 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:ring-offset-2 transition duration-150 ease-in-out text-lg"
                     >
-                        {currentStep === 4 ? 'Submit All Details' : 'Next'}
+                        {currentStep === 5 ? 'Submit All Details' : 'Next'}
                     </button>
                 </div>
             )}

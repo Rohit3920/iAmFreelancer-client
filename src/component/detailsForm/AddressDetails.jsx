@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import api from '../../utils/api'
 
-function AddressDetails({ nextClick }) {
+function AddressDetails({ nextClick, myFormData }) {
     const [formData, setFormData] = useState({
-        street: '',
-        city: '',
-        state: '',
-        zipCode: '',
+        street: myFormData.street || '',
+        city: myFormData.city || '',
+        state: myFormData.state || '',
+        zipCode: myFormData.zipCode || '',
         country: 'India',
         addressType: '',
     });

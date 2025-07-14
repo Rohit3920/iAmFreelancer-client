@@ -2,12 +2,12 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'rea
 import { ToastContainer, toast } from 'react-toastify';
 import api from '../../utils/api'
 
-const DomainDetails = forwardRef(({ nextClick }, ref) => {
+const DomainDetails = forwardRef(({ nextClick, myFormData }, ref) => {
     const [formData, setFormData] = useState({
-        freelancerDomain: '',
-        technologies: [],
-        domainExperience: '',
-        description: '',
+        freelancerDomain: myFormData.freelancerDomain || '',
+        technologies: myFormData.technologies || [],
+        domainExperience: myFormData.domainExperience || '',
+        description: myFormData.description || '',
     });
 
     const [currentTechnologyInput, setCurrentTechnologyInput] = useState('');
