@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { MapPin, Calendar, MessageSquare, Clock, ChevronRight } from 'lucide-react';
 import api from '../utils/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 function Profile() {
     const navigate = useNavigate();
+    const { userId } = useParams();
     const [userData, setUserData] = useState(null);
     const [viewBasic, setViewBasic] = useState(false);
     const [viewAddress, setViewAddress] = useState(false);
@@ -16,7 +17,7 @@ function Profile() {
     //     education: false,
     //     domainDetail: false,
     // });
-    const userId = localStorage.getItem('userId');
+    const validId = localStorage.getItem('userId');
 
     useEffect(() => {
         if (userId) {
@@ -66,7 +67,11 @@ function Profile() {
                                 alt="Profile"
                                 className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                             />
-                            <button onClick={changeProfilePicture} className='text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200'>Edit profile picture</button>
+                            {
+                                validId === userId && (
+                                    <button onClick={changeProfilePicture} className='text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200'>Edit profile picture</button>
+                                )
+                            }
                         </div>
                         <h2 className="text-xl font-bold text-gray-800 mb-1 text-center md:text-left">
                             {user.username}
@@ -172,16 +177,18 @@ function Profile() {
                                             <p className="text-sm text-gray-700"><strong>Address Type:</strong> {userData.address[0].addressType}</p>
                                         </div>
                                     }
-
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
             </div>
-            <button onClick={() => { navigate('/details') }} className='bg-blue-500 hover:bg-blue-600 text-white mb-12 font-bold py-2 px-4 rounded'>
+            {
+                validId === userId && (
+                    <button onClick={() => { navigate('/details') }} className='bg-blue-500 hover:bg-blue-600 text-white mb-12 font-bold py-2 px-4 rounded'>
                 Edit Profile
             </button>
+                )}
         </div>
     );
 }

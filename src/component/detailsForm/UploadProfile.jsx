@@ -89,7 +89,7 @@ function UploadProfile({ nextClick , prevClick  }) {
             if (done && nextClick) {
                 nextClick();
             }else if( done && !prevClick) {
-                navigate('/profile');
+                navigate(`/profile/${userId}`);
             }
         } catch (err) {
             console.error('Submission error:', err);

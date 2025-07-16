@@ -11,6 +11,10 @@ import ForgetPassword from './component/ForgetPassword'
 import Profile from './pages/Profile'
 import Details from './component/Details'
 import UploadProfile from './component/detailsForm/UploadProfile'
+import CreateGig from './pages/gig/CreateGig'
+import UpdateGig from './pages/gig/UpdateGig'
+import GigList from './pages/gig/GigList'
+import GigDetails from './pages/gig/GigDetails'
 
 function App() {
 
@@ -18,13 +22,19 @@ function App() {
     <div className='text-center mx-auto'>
       <Router>
         <Navbar />
-        <div className="pb-20"></div>
+        <div className="pb-28"></div>
         <Routes>
           <Route element={<ProtectRoute />}>
             <Route path="/" element={<Home />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/details" element={<Details />} />
             <Route path="/upload-profile" element={<UploadProfile />} />
+
+            {/* gig routes */}
+            <Route path="/create-gig" element={<CreateGig />} />
+            <Route path="/update-gig/:gigId" element={<UpdateGig />} />
+            <Route path="/view-gigs" element={<GigList />} />
+            <Route path="/view-gig/:gigId" element={<GigDetails />} />
           </Route>
 
           <Route path="/login" element={<Login />} />

@@ -1,12 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+const ChevronDown = ({ className }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        className={className}
+    >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+);
 
 function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [activeDropdown, setActiveDropdown] = useState(null);
+    const dropdownRefs = useRef({});
+    const userId = localStorage.getItem('userId');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -20,19 +35,46 @@ function Navbar() {
 
     const handleLogout = () => {
         localStorage.clear();
-
         setIsLoggedIn(false);
         toast.success('Logged out successfully!');
         navigate('/login');
     };
 
+    const toggleDropdown = (dropdownName) => {
+        setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
+    };
+
+    const closeDropdown = () => {
+        setActiveDropdown(null);
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            let isClickInsideDropdown = false;
+            for (const key in dropdownRefs.current) {
+                if (dropdownRefs.current[key] && dropdownRefs.current[key].contains(event.target)) {
+                    isClickInsideDropdown = true;
+                    break;
+                }
+            }
+            if (!isClickInsideDropdown && activeDropdown) {
+                closeDropdown();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeDropdown]);
+
     return (
-        <nav className="bg-white w-full py-4 shadow-sm px-4 sm:px-6 lg:px-8 fixed top-0 left-0 z-10">
+        <nav className="bg-white w-full pt-4 shadow-sm px-4 sm:px-6 lg:px-8 fixed top-0 left-0 z-10">
             <div className="container mx-auto flex justify-between items-center flex-wrap">
                 <div className="flex-shrink-0 mr-6">
-                    <a href="/" className="text-gray-800 text-3xl font-bold">
+                    <Link to="/" className="text-gray-800 text-3xl font-bold">
                         <span className="text-blue-500">i<span className='text-orange-500'>Am</span>Freelancer</span><span className='text-orange-500'>.</span>
-                    </a>
+                    </Link>
                 </div>
 
                 <div className="flex-grow max-w-xl mx-auto hidden md:block">
@@ -84,17 +126,17 @@ function Navbar() {
                 >
                     <ul className="flex flex-col md:flex-row md:space-x-8 space-y-2 md:space-y-0 items-center">
                         <li className='md:ml-3'>
-                            <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out">
+                            <Link to="#" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out">
                                 Become a Freelancer
-                            </a>
+                            </Link>
                         </li>
 
                         {!isLoggedIn ? (
                             <>
                                 <li>
-                                    <a href="/login" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out">
+                                    <Link to="/login" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out">
                                         Login
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li>
                                     <button
@@ -116,6 +158,66 @@ function Navbar() {
                             </li>
                         )}
                     </ul>
+                </div>
+            </div>
+            <div className="main-menu flex justify-center pt-2">
+                <div className="hidden md:flex items-center space-x-6">
+                    <Link to="/" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out px-3 py-2 rounded-md">
+                        Dashboard
+                    </Link>
+
+                    <div className="relative" ref={el => dropdownRefs.current['myBusiness'] = el}>
+                        <button
+                            onClick={() => toggleDropdown('myBusiness')}
+                            className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out px-3 py-2 rounded-md focus:outline-none"
+                        >
+                            My Business <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${activeDropdown === 'myBusiness' ? 'rotate-180' : 'rotate-0'}`} />
+                        </button>
+                        {activeDropdown === 'myBusiness' && (
+                            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                                <div className="py-1">
+                                    <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Orders</Link>
+                                    <Link to="/view-gigs" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Gigs</Link>
+                                    <Link to={`/profile/${userId}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Profile</Link>
+                                    <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Earnings</Link>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="relative" ref={el => dropdownRefs.current['growthMarketing'] = el}>
+                        <button
+                            onClick={() => toggleDropdown('growthMarketing')}
+                            className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out px-3 py-2 rounded-md focus:outline-none"
+                        >
+                            Growth & Marketing <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${activeDropdown === 'growthMarketing' ? 'rotate-180' : 'rotate-0'}`} />
+                        </button>
+                        {activeDropdown === 'growthMarketing' && (
+                            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                                <div className="py-1">
+                                    <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Promotions</Link>
+                                    <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Analytics</Link>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="relative" ref={el => dropdownRefs.current['analytics'] = el}>
+                        <button
+                            onClick={() => toggleDropdown('analytics')}
+                            className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out px-3 py-2 rounded-md focus:outline-none"
+                        >
+                            Analytics <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${activeDropdown === 'analytics' ? 'rotate-180' : 'rotate-0'}`} />
+                        </button>
+                        {activeDropdown === 'analytics' && (
+                            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                                <div className="py-1">
+                                    <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Reports</Link>
+                                    <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Performance</Link>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </nav>

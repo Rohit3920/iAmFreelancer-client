@@ -1,0 +1,156 @@
+{
+  "categories": [
+    {
+      "main": "Accounting & consulting",
+      "sub": [
+        "personal and professional Coaching",
+        "Accounting & Bookkeeping",
+        "Financial Planning",
+        "Recruiting and Human Resources",
+        "Management Consulting and Consulting"
+      ]
+    },
+    {
+      "main": "Admin Support",
+      "sub": [
+        "Data Entry & Transcription Services",
+        "Virtual Assistant Services",
+        "Project Management",
+        "Market Research & product Reviews"
+      ]
+    },
+    {
+      "main": "Customer Service",
+      "sub": [
+        "Community Management & tagging",
+        "Customer Support & Tech Support"
+      ]
+    },
+    {
+      "main": "Data Science & Analytics",
+      "sub": [
+        "Data Analytics & Testing",
+        "Data Extraction/ETL",
+        "Data Mining & Management",
+        "AI & Machine Learning"
+      ]
+    },
+    {
+      "main": "Design & Creative",
+      "sub": [
+        "Art & Illustration",
+        "Audio & Music Production",
+        "Video & Animation",
+        "Branding & Logo Design",
+        "NFT, AR/VR & Game Art",
+        "Graphic, Editorial & Presentation Design",
+        "Performing Arts",
+        "Photography & Photo Editing",
+        "Product Design & Industrial Design"
+      ]
+    },
+    {
+      "main": "Engineering & Architecture",
+      "sub": [
+        "Building & Landscape Architecture",
+        "Chemical Engineering",
+        "Civil & Structural Engineering",
+        "Contract Manufacturing",
+        "Electrical & Electronic Engineering",
+        "Interior & Trade Show Design",
+        "Energy & Mechanical Engineering",
+        "Physical Sciences",
+        "3D Modeling & CAD"
+      ]
+    },
+    {
+      "main": "IT & Networking",
+      "sub": [
+        "Database Management & Administration",
+        "ERP/CRM Software",
+        "Information Security & Compliance",
+        "Network & System Administration",
+        "DevOps & Solution Architecture"
+      ]
+    },
+    {
+      "main": "Legal",
+      "sub": [
+        "Corporate & Contract Law",
+        "International & Immigration Law",
+        "Finance & Tax Law",
+        "Public Law"
+      ]
+    },
+    {
+      "main": "Sales & Marketing",
+      "sub": [
+        "Digital Marketing",
+        "Lead Generation & Telemarketing",
+        "Marketing, PR & Brand Strategy"
+      ]
+    },
+    {
+      "main": "Translation",
+      "sub": [
+        "Language Tutoring & Interpretation",
+        "Translation & Localization Services"
+      ]
+    },
+    {
+      "main": "Web, Mobile & Software Dev",
+      "sub": [
+        "Blockchain, NFT & Cryptocurrency",
+        "AI Apps & Integration",
+        "Desktop Application Development",
+        "E-commerce Development",
+        "Game Design & Development",
+        "Mobile Development",
+        "Software Development",
+        "Product Management & Scrum",
+        "QA Testing",
+        "Scripts & Utilities",
+        "Web Development",
+        "Web & Mobile Design",
+        "Web Programming"
+      ]
+    },
+    {
+      "Writing": {
+        "sub": [
+          "Sales & Marketing Copywriting",
+          "Content Writing & Blogging",
+          "Editing & Proofreading Services",
+          "Professional & Business Writing",
+          "Technical Writing"
+        ]
+      }
+    }
+  ],
+
+  "serviceTypes": ["New Website", "Website Redesign", "Website Customization"],
+
+  "gigHelpingTypes": [
+    "Business",
+    "E-commerce",
+    "Blog",
+    "Portfolio",
+    "Educational"
+  ],
+
+  "coreFeatures": [
+    "Content Upload",
+    "Responsive Design",
+    "Payment Processing",
+    "Customer Support",
+    "Analytics"
+  ],
+
+  "plugins": [
+    "SEO Optimization",
+    "Security",
+    "Backup",
+    "Performance",
+    "Social Media Integration"
+  ]
+}
