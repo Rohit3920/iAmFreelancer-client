@@ -1,6 +1,6 @@
 import React from 'react'
 import './App.css'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import ProtectRoute from './ProtectRoute'
 import PageNotFound from './PageNotFound'
 import Home from './pages/Home'
@@ -15,6 +15,8 @@ import CreateGig from './pages/gig/CreateGig'
 import UpdateGig from './pages/gig/UpdateGig'
 import GigList from './pages/gig/GigList'
 import GigDetails from './pages/gig/GigDetails'
+import ChatUI from './component/message/ChatUl'
+import UserProfile from './pages/UserProfile'
 
 function App() {
 
@@ -29,12 +31,19 @@ function App() {
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/details" element={<Details />} />
             <Route path="/upload-profile" element={<UploadProfile />} />
+            <Route path='/view-user-profile/:userId' element={<UserProfile />} />
 
             {/* gig routes */}
             <Route path="/create-gig" element={<CreateGig />} />
             <Route path="/update-gig/:gigId" element={<UpdateGig />} />
-            <Route path="/view-gigs" element={<GigList />} />
+            {/* <Route path="/view-gigs" element={<GigList />} /> */}
+            <Route path="/view-gigs/:userId" element={<GigList />} />
+            {/* <Route path="/:messageUserId/view-gigs/:gigId" element={<GigList />} /> */}
             <Route path="/view-gig/:gigId" element={<GigDetails />} />
+
+            {/* chat routes */}
+            <Route path="/user/messages" element={<ChatUI />} />
+            <Route path="/user/messages/:messageUserId" element={<ChatUI />} />
           </Route>
 
           <Route path="/login" element={<Login />} />

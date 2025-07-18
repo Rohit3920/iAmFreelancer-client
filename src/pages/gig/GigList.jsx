@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import DeleteGigButton from '../../component/gig/DeleteGigButton';
@@ -9,14 +9,17 @@ function GigList() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [openDropdownId, setOpenDropdownId] = useState(null);
-    const userId = localStorage.getItem('userId');
+    const loginUserId = localStorage.getItem('userId');
     const dropdownRefs = useRef({});
+
+    const params = useParams();
+    const { userId } = params;
 
     const fetchGigs = async () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.get('/api/gig');
+            const response = await api.get(`/api/gig/user/${userId}`);
             setGigs(response.data);
         } catch (err) {
             console.error('Error fetching gigs:', err);
@@ -29,7 +32,7 @@ function GigList() {
 
     useEffect(() => {
         fetchGigs();
-    }, []);
+    }, [userId]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -69,14 +72,16 @@ function GigList() {
         <div className="mx-auto px-6 py-8 bg-gray-100 min-h-screen">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl font-semibold text-gray-900">Gigs</h1>
-                <div className="flex items-center space-x-3">
-                    <Link
-                        to="/create-gig"
-                        className="px-6 py-2 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
-                    >
-                        CREATE A NEW GIG
-                    </Link>
-                </div>
+                {userId === loginUserId && (
+                    <div className="flex items-center space-x-3">
+                        <Link
+                            to="/create-gig"
+                            className="px-6 py-2 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+                        >
+                            CREATE A NEW GIG
+                        </Link>
+                    </div>
+                )}
             </div>
 
             <div className="bg-white rounded-lg shadow-md">
@@ -85,7 +90,7 @@ function GigList() {
 
                     {gigs.length === 0 ? (
                         <div className="text-center py-8 text-gray-600">
-                            You have no gigs yet. <Link to="/create-gig" className="text-blue-600 hover:underline">Create your first gig!</Link>
+                            You have no gigs yet. {userId === loginUserId && <Link to="/create-gig" className="text-blue-600 hover:underline">Create your first gig!</Link>}
                         </div>
                     ) : (
                         <div className="h-full">
@@ -114,7 +119,6 @@ function GigList() {
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {gigs.map((gig) => (
-                                        gig.userId._id === userId &&
                                         <tr key={gig._id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
@@ -151,55 +155,57 @@ function GigList() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 0 %
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setOpenDropdownId(openDropdownId === gig._id ? null : gig._id);
-                                                    }}
-                                                    className="text-gray-400 hover:text-gray-600 focus:outline-none"
-                                                >
-                                                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                                    </svg>
-                                                </button>
-
-                                                {openDropdownId === gig._id && (
-                                                    <div
-                                                        ref={el => dropdownRefs.current[gig._id] = el}
-                                                        className="origin-top-right absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-20 "
-                                                        role="menu"
-                                                        aria-orientation="vertical"
-                                                        aria-labelledby="menu-button"
+                                            {userId === loginUserId && (
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setOpenDropdownId(openDropdownId === gig._id ? null : gig._id);
+                                                        }}
+                                                        className="text-gray-400 hover:text-gray-600 focus:outline-none"
                                                     >
-                                                        <div className="py-1 border-0" role="none">
-                                                            <Link
-                                                                to={`/view-gig/${gig._id}`}
-                                                                className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
-                                                                role="menuitem"
-                                                                onClick={() => setOpenDropdownId(null)}
-                                                            >
-                                                                View
-                                                            </Link>
-                                                            <Link
-                                                                to={`/update-gig/${gig._id}`}
-                                                                className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
-                                                                role="menuitem"
-                                                                onClick={() => setOpenDropdownId(null)}
-                                                            >
-                                                                Edit
-                                                            </Link>
-                                                            <DeleteGigButton
-                                                                gigId={gig._id}
-                                                                onGigDeleted={handleGigDeleted}
-                                                                btnColor ={"bg-transparent text-gray-700 hover:bg-gray-100"}
-                                                                className="text-gray-700 block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                                                                role="menuitem"
-                                                            />
+                                                        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                        </svg>
+                                                    </button>
+
+                                                    {openDropdownId === gig._id && (
+                                                        <div
+                                                            ref={el => dropdownRefs.current[gig._id] = el}
+                                                            className="origin-top-right absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-white focus:outline-none z-20 "
+                                                            role="menu"
+                                                            aria-orientation="vertical"
+                                                            aria-labelledby="menu-button"
+                                                        >
+                                                            <div className="py-1 border-0" role="none">
+                                                                <Link
+                                                                    to={`/view-gig/${gig._id}`}
+                                                                    className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
+                                                                    role="menuitem"
+                                                                    onClick={() => setOpenDropdownId(null)}
+                                                                >
+                                                                    View
+                                                                </Link>
+                                                                <Link
+                                                                    to={`/update-gig/${gig._id}`}
+                                                                    className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
+                                                                    role="menuitem"
+                                                                    onClick={() => setOpenDropdownId(null)}
+                                                                >
+                                                                    Edit
+                                                                </Link>
+                                                                <DeleteGigButton
+                                                                    gigId={gig._id}
+                                                                    onGigDeleted={handleGigDeleted}
+                                                                    btnColor={"bg-transparent text-gray-700 hover:bg-gray-100"}
+                                                                    className="text-gray-700 block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                                                    role="menuitem"
+                                                                />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </td>
+                                                    )}
+                                                </td>
+                                            )}
                                         </tr>
                                     ))}
                                 </tbody>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import api from '../utils/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -20,9 +21,25 @@ function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState(null);
+    const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const dropdownRefs = useRef({});
+    const profileDropdownRef = useRef(null);
     const userId = localStorage.getItem('userId');
     const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        if (userId) {
+            api.get(`api/auth/${userId}`)
+                .then(res => {
+                    setUser(res.data);
+                })
+                .catch(err => {
+                    console.error("Error fetching user data:", err);
+                    setUser(null);
+                });
+        }
+    }, [userId]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -38,27 +55,45 @@ function Navbar() {
         setIsLoggedIn(false);
         toast.success('Logged out successfully!');
         navigate('/login');
+        closeProfileDropdown();
     };
 
     const toggleDropdown = (dropdownName) => {
         setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
+        setIsProfileDropdownOpen(false);
     };
 
     const closeDropdown = () => {
         setActiveDropdown(null);
     };
 
+    const toggleProfileDropdown = () => {
+        setIsProfileDropdownOpen(prev => !prev);
+        closeDropdown();
+    };
+
+    const closeProfileDropdown = () => {
+        setIsProfileDropdownOpen(false);
+    };
+
     useEffect(() => {
         const handleClickOutside = (event) => {
-            let isClickInsideDropdown = false;
+            let isClickInsideAnyDropdown = false;
+
             for (const key in dropdownRefs.current) {
                 if (dropdownRefs.current[key] && dropdownRefs.current[key].contains(event.target)) {
-                    isClickInsideDropdown = true;
+                    isClickInsideAnyDropdown = true;
                     break;
                 }
             }
-            if (!isClickInsideDropdown && activeDropdown) {
+
+            if (profileDropdownRef.current && profileDropdownRef.current.contains(event.target)) {
+                isClickInsideAnyDropdown = true;
+            }
+
+            if (!isClickInsideAnyDropdown) {
                 closeDropdown();
+                closeProfileDropdown();
             }
         };
 
@@ -66,10 +101,16 @@ function Navbar() {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [activeDropdown]);
+    }, [activeDropdown, isProfileDropdownOpen]);
+
+    const handleProfileLinkClick = (path) => {
+        closeProfileDropdown();
+        navigate(path);
+    };
 
     return (
         <nav className="bg-white w-full pt-4 shadow-sm px-4 sm:px-6 lg:px-8 fixed top-0 left-0 z-10">
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
             <div className="container mx-auto flex justify-between items-center flex-wrap">
                 <div className="flex-shrink-0 mr-6">
                     <Link to="/" className="text-gray-800 text-3xl font-bold">
@@ -148,14 +189,53 @@ function Navbar() {
                                 </li>
                             </>
                         ) : (
-                            <li>
-                                <button
-                                    className="px-5 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300 ease-in-out font-semibold"
-                                    onClick={handleLogout}
-                                >
-                                    Logout
-                                </button>
-                            </li>
+                            user && (
+                                <li className="relative" ref={profileDropdownRef}>
+                                    <div
+                                        className="relative flex-shrink-0 cursor-pointer"
+                                        onClick={toggleProfileDropdown}
+                                    >
+                                        <img
+                                            src={user.profilePicture || 'https://placehold.co/48x48/CCCCCC/666666?text=User'}
+                                            alt={user.username}
+                                            className="h-10 w-10 rounded-full object-cover border-2 border-transparent hover:border-blue-500 transition-all duration-200"
+                                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/48x48/CCCCCC/666666?text=User'; }}
+                                        />
+                                        {isProfileDropdownOpen && (
+                                            <div className="absolute right-0 mt-3 w-48 rounded-lg shadow-xl bg-white focus:outline-none z-50 animate-fade-in-down"
+                                                style={{ transformOrigin: 'top right' }}
+                                            >
+                                                <div className="py-1">
+                                                    <div className="px-4 bg-blue-100 py-2 text-sm rounded-lg text-gray-800 border-b border-gray-100">
+                                                        <strong className="block truncate">{user.username}<small> ( {user.userRole} ) </small></strong>
+                                                    </div>
+                                                    <Link
+                                                        to={`/profile/${userId}`}
+                                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition duration-150 ease-in-out"
+                                                        onClick={() => handleProfileLinkClick(`/profile/${userId}`)}
+                                                    >
+                                                        Your Profile
+                                                    </Link>
+                                                    <Link
+                                                        to="/user/messages"
+                                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition duration-150 ease-in-out"
+                                                        onClick={() => handleProfileLinkClick("/user/messages")}
+                                                    >
+                                                        My Messages
+                                                    </Link>
+                                                    <div className="border-t border-gray-100 my-1"></div>
+                                                    <button
+                                                        onClick={handleLogout}
+                                                        className="block w-full text-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-800 transition duration-150 ease-in-out"
+                                                    >
+                                                        Sign out
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </li>
+                            )
                         )}
                     </ul>
                 </div>
@@ -174,10 +254,10 @@ function Navbar() {
                             My Business <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${activeDropdown === 'myBusiness' ? 'rotate-180' : 'rotate-0'}`} />
                         </button>
                         {activeDropdown === 'myBusiness' && (
-                            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white  focus:outline-none z-50">
                                 <div className="py-1">
                                     <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Orders</Link>
-                                    <Link to="/view-gigs" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Gigs</Link>
+                                    <Link to={`/view-gigs/${userId}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>My Gigs</Link>
                                     <Link to={`/profile/${userId}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Profile</Link>
                                     <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Earnings</Link>
                                 </div>
@@ -193,7 +273,7 @@ function Navbar() {
                             Growth & Marketing <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${activeDropdown === 'growthMarketing' ? 'rotate-180' : 'rotate-0'}`} />
                         </button>
                         {activeDropdown === 'growthMarketing' && (
-                            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white  focus:outline-none z-50">
                                 <div className="py-1">
                                     <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Promotions</Link>
                                     <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Analytics</Link>
@@ -210,7 +290,7 @@ function Navbar() {
                             Analytics <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${activeDropdown === 'analytics' ? 'rotate-180' : 'rotate-0'}`} />
                         </button>
                         {activeDropdown === 'analytics' && (
-                            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white  focus:outline-none z-50">
                                 <div className="py-1">
                                     <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Reports</Link>
                                     <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Performance</Link>
