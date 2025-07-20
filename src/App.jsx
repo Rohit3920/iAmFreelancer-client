@@ -17,6 +17,8 @@ import GigList from './pages/gig/GigList'
 import GigDetails from './pages/gig/GigDetails'
 import ChatUI from './component/message/ChatUl'
 import UserProfile from './pages/UserProfile'
+import Order from './pages/Order'
+// import 
 
 function App() {
 
@@ -44,6 +46,9 @@ function App() {
             {/* chat routes */}
             <Route path="/user/messages" element={<ChatUI />} />
             <Route path="/user/messages/:messageUserId" element={<ChatUI />} />
+
+            {/* order routes */}
+            <Route path='/my-order' element={<Order />} />
           </Route>
 
           <Route path="/login" element={<Login />} />

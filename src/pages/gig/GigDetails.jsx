@@ -180,7 +180,7 @@ function GigDetails() {
                 {
                     gig.userId?.username && <div className='mt-4 text-gray-400'>
                         <p><strong>Created By:</strong> <span className="font-medium">{gig.userId?.username || 'N/A'}</span></p>
-                        <p><Link to={`/profile/${gig.userId?._id}`} className="font-medium cursor-pointer">{gig.userId?.email || 'N/A'}</Link></p>
+                        <p><Link to={`/view-user-profile/${gig.userId?._id}`} className="font-medium cursor-pointer">{gig.userId?.email || 'N/A'}</Link></p>
                     </div>
                 }
             </div>
