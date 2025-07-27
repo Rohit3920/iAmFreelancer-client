@@ -20,6 +20,7 @@ import UserProfile from './pages/UserProfile'
 import Order from './pages/Order'
 import ViewOrder from './pages/order/ViewOrder'
 import Dashboard from './pages/dashboard/Dashboard'
+import CreateOrder from './pages/order/CreateOrder'
 
 function App() {
 
@@ -52,6 +53,7 @@ function App() {
             {/* order routes */}
             <Route path='/my-order' element={<Order />} />
             <Route path='/view-order/:id' element={<ViewOrder />} />
+            <Route path='/add-order/:gigId' element={<CreateOrder />} />
           </Route>
 
           <Route path="/login" element={<Login />} />

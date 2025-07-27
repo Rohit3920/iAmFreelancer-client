@@ -76,7 +76,7 @@ function GigDetails() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                     <h1 className="text-4xl font-extrabold text-gray-900 leading-tight">{gig.title}</h1>
                     {
-                        gig.userId._id === userId &&
+                        gig.userId._id === userId ?
                         <div className="flex flex-wrap gap-3">
                             <Link
                                 to={`/update-gig/${gig._id}`}
@@ -86,7 +86,16 @@ function GigDetails() {
                             </Link>
                             <DeleteGigButton gigId={gig._id} onGigDeleted={handleGigDeleted} />
                         </div>
+                        :<>
+                        <Link
+                                to={`/add-order/${gig._id}`}
+                                className="px-5 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+                            >
+                                Add Order
+                            </Link>
+                        </>
                     }
+
                 </div>
 
                 <div className="mb-8">

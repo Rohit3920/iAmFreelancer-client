@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import DeleteGigButton from '../../component/gig/DeleteGigButton';
+import { Search } from 'lucide-react';
 
 function GigList() {
     const [gigs, setGigs] = useState([]);
@@ -15,12 +16,18 @@ function GigList() {
     const params = useParams();
     const { userId } = params;
 
-    const fetchGigs = async () => {
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const fetchGigs = async (currentSearchTerm = '') => {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.get(`/api/gig/user/${userId}`);
-            setGigs(response.data);
+            const searchParams = new URLSearchParams({ userId: userId });
+            if (currentSearchTerm) {
+                searchParams.append('q', currentSearchTerm);
+            }
+            const response = await api.get(`/api/search/gigs?${searchParams.toString()}`);
+            setGigs(response.data.data.gigs);
         } catch (err) {
             console.error('Error fetching gigs:', err);
             setError('Failed to fetch gigs. Please try again.');
@@ -31,8 +38,16 @@ function GigList() {
     };
 
     useEffect(() => {
-        fetchGigs();
+        fetchGigs(searchTerm);
     }, [userId]);
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            fetchGigs(searchTerm);
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -52,45 +67,49 @@ function GigList() {
         setOpenDropdownId(null);
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-screen bg-gray-50">
-                <div className="text-center text-lg font-medium text-gray-700">Loading gigs...</div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="flex justify-center items-center h-screen bg-gray-50">
-                <div className="text-center text-lg font-medium text-red-600">{error}</div>
-            </div>
-        );
-    }
-
     return (
         <div className="mx-auto px-6 py-8 bg-gray-100 min-h-screen">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl font-semibold text-gray-900">Gigs</h1>
-                {userId === loginUserId && (
-                    <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
+                    <div className="relative flex items-center">
+                        <input
+                            type="text"
+                            placeholder="Search your gigs..."
+                            className="block w-64 pl-4 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 placeholder-gray-500"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <Search className="h-5 w-5 text-gray-400" />
+                        </div>
+                    </div>
+
+                    {userId === loginUserId && (
                         <Link
                             to="/create-gig"
                             className="px-6 py-2 bg-green-600 text-white font-semibold rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
                         >
                             CREATE A NEW GIG
                         </Link>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-md">
                 <div className="px-6 py-4">
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Gigs</h2>
 
-                    {gigs.length === 0 ? (
+                    {loading ? (
+                        <div className="text-center py-8 text-gray-600">Loading gigs...</div>
+                    ) : error ? (
+                        <div className="text-center py-8 text-red-600">{error}</div>
+                    ) : gigs.length === 0 ? (
                         <div className="text-center py-8 text-gray-600">
-                            You have no gigs yet. {userId === loginUserId && <Link to="/create-gig" className="text-blue-600 hover:underline">Create your first gig!</Link>}
+                            {searchTerm ? (
+                                `No gigs found matching "${searchTerm}".`
+                            ) : (
+                                `You have no gigs yet. ${userId === loginUserId ? <Link to="/create-gig" className="text-blue-600 hover:underline">Create your first gig!</Link> : ''}`
+                            )}
                         </div>
                     ) : (
                         <div className="h-full">

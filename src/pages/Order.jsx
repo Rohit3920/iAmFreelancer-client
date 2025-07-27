@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import OrderCard from '../component/OrderCard';
 import GigReview from '../component/review/GigReview';
+import { Search } from 'lucide-react'; // Import the Search icon
 
 function Order() {
     const [orders, setOrders] = useState([]);
@@ -11,29 +12,77 @@ function Order() {
     const [currentUser, setCurrentUser] = useState(null);
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [selectedOrderForReview, setSelectedOrderForReview] = useState(null);
+    const [searchTerm, setSearchTerm] = useState(''); // State for search term
     const userId = localStorage.getItem('userId');
 
+    // Debounce function to limit API calls on search input
+    const debounce = (func, delay) => {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    };
+
+    // Memoized and debounced function for fetching orders with search
+    const fetchOrders = useCallback(debounce(async (currentUserId, userRole, query = '') => {
+        setLoading(true); // Start loading when a new fetch is initiated
+        try {
+            const searchParams = new URLSearchParams();
+            if (userRole === 'client') {
+                searchParams.append('clientId', currentUserId);
+            } else if (userRole === 'freelancer') {
+                searchParams.append('freelancerId', currentUserId);
+            }
+
+            if (query) {
+                searchParams.append('q', query);
+            }
+            
+            const ordersRes = await api.get(`/api/search/orders?${searchParams.toString()}`);
+            setOrders(ordersRes.data.data.orders);
+        } catch (err) {
+            console.error('Error fetching orders:', err);
+            setError('Failed to load orders.');
+            toast.error('Failed to load orders.');
+        } finally {
+            setLoading(false); // End loading regardless of success or failure
+        }
+    }, 300), []); // Debounce by 300ms
+
+    // Effect to fetch current user and then orders based on user role and search term
     useEffect(() => {
-        const fetchOrdersAndUser = async () => {
-            setLoading(true);
+        const fetchUserAndOrders = async () => {
+            setLoading(true); // Set loading true while fetching user
             try {
                 const userRes = await api.get(`/api/auth/${userId}`);
                 setCurrentUser(userRes.data);
-
-                const ordersRes = await api.get(`/api/orders/${userRes.data._id}/${userRes.data.userRole}`);
-                console.log(ordersRes.data.data.orders);
-                setOrders(ordersRes.data.data.orders);
+                // Call the debounced fetchOrders function
+                fetchOrders(userRes.data._id, userRes.data.userRole, searchTerm);
             } catch (err) {
-                console.error('Error fetching data:', err);
-                setError('Failed to load orders or user data.');
-                toast.error('Failed to load dashboard data.');
-            } finally {
-                setLoading(false);
+                console.error('Error fetching user data or initial orders:', err);
+                setError('Failed to load user or order data.');
+                toast.error('Failed to load user or order data.');
+                setLoading(false); // Stop loading if there's an error in user fetch
             }
         };
 
-        fetchOrdersAndUser();
-    }, [userId]);
+        if (userId) {
+            fetchUserAndOrders();
+        } else {
+            setLoading(false);
+            setError('User ID not found. Please log in.');
+            toast.error('User not authenticated.');
+        }
+    }, [userId, fetchOrders, searchTerm]); // `fetchOrders` and `searchTerm` are dependencies
+
+    // Handle changes in the search input
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        // The `useEffect` above will automatically re-trigger `fetchOrders` when `searchTerm` changes,
+        // and `fetchOrders` itself is debounced.
+    };
 
     const handleStatusChange = async (orderId, newStatus) => {
         try {
@@ -75,32 +124,35 @@ function Order() {
         setSelectedOrderForReview(null);
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-screen bg-gray-50">
-                <div className="text-center text-lg font-medium text-gray-700">Loading orders...</div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="flex justify-center items-center h-screen bg-gray-50">
-                <div className="text-center text-lg font-medium text-red-600">{error}</div>
-            </div>
-        );
-    }
-
+    // Loading and error states are shown as overlays, but the header and search bar remain
+    // only the order list area is affected.
+    
     if (!currentUser) {
         return <div className="text-center text-red-500 py-4">User not authenticated.</div>;
     }
 
     return (
         <div className="container mx-auto px-4 py-8 min-h-screen">
-            <h1 className="text-4xl font-semibold text-gray-900 mb-8">
-                My Orders
-            </h1>
+            {/* Header and Search Bar - Always Visible */}
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-4xl font-semibold text-gray-900">
+                    My Orders
+                </h1>
+                <div className="relative flex items-center w-full max-w-sm ml-4">
+                    <input
+                        type="text"
+                        placeholder="Search orders..."
+                        className="block w-full pl-4 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 placeholder-gray-500"
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <Search className="h-5 w-5 text-gray-400" />
+                    </div>
+                </div>
+            </div>
 
+            {/* Review Form Modal */}
             {showReviewForm && selectedOrderForReview && (
                 <div className='size-full bg-blue-200'>
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
@@ -117,9 +169,18 @@ function Order() {
                 </div>
             )}
 
-            {orders.length === 0 ? (
+            {/* Order List Area - This is where loading/error states will appear */}
+            {loading ? (
+                <div className="flex justify-center items-center py-12">
+                    <div className="text-center text-lg font-medium text-gray-700">Loading orders...</div>
+                </div>
+            ) : error ? (
+                <div className="flex justify-center items-center py-12">
+                    <div className="text-center text-lg font-medium text-red-600">{error}</div>
+                </div>
+            ) : orders.length === 0 ? (
                 <div className="text-center py-12 text-gray-600 text-lg">
-                    No orders found for your role.
+                    No orders found for your role or matching your search.
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
