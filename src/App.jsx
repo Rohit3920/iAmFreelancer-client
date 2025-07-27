@@ -18,7 +18,8 @@ import GigDetails from './pages/gig/GigDetails'
 import ChatUI from './component/message/ChatUl'
 import UserProfile from './pages/UserProfile'
 import Order from './pages/Order'
-// import 
+import ViewOrder from './pages/order/ViewOrder'
+import Dashboard from './pages/dashboard/Dashboard'
 
 function App() {
 
@@ -30,6 +31,7 @@ function App() {
         <Routes>
           <Route element={<ProtectRoute />}>
             <Route path="/" element={<Home />} />
+            <Route path="/my-dashboard" element={<Dashboard />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/details" element={<Details />} />
             <Route path="/upload-profile" element={<UploadProfile />} />
@@ -49,6 +51,7 @@ function App() {
 
             {/* order routes */}
             <Route path='/my-order' element={<Order />} />
+            <Route path='/view-order/:id' element={<ViewOrder />} />
           </Route>
 
           <Route path="/login" element={<Login />} />

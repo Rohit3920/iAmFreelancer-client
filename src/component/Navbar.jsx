@@ -39,7 +39,7 @@ function Navbar() {
                     setUser(null);
                 });
         }
-    }, [userId]);
+    }, [userId, navigate]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -242,7 +242,7 @@ function Navbar() {
             </div>
             <div className="main-menu flex justify-center pt-2">
                 <div className="hidden md:flex items-center space-x-6">
-                    <Link to="/" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out px-3 py-2 rounded-md">
+                    <Link to="/my-dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out px-3 py-2 rounded-md">
                         Dashboard
                     </Link>
 
@@ -257,9 +257,13 @@ function Navbar() {
                             <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white  focus:outline-none z-50">
                                 <div className="py-1">
                                     <Link to="/my-order" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Orders</Link>
-                                    <Link to={`/view-gigs/${userId}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>My Gigs</Link>
+                                    {
+                                        user.userRole == "freelancer" ? <Link to={`/view-gigs/${userId}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>My Gigs</Link> : <></>
+                                    }
                                     <Link to={`/profile/${userId}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Profile</Link>
-                                    <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Earnings</Link>
+                                    {
+                                        user.userRole == "freelancer" ? <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Earnings</Link> : <></>
+                                    }
                                 </div>
                             </div>
                         )}
@@ -287,7 +291,7 @@ function Navbar() {
                             onClick={() => toggleDropdown('analytics')}
                             className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out px-3 py-2 rounded-md focus:outline-none"
                         >
-                            Analytics <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${activeDropdown === 'analytics' ? 'rotate-180' : 'rotate-0'}`} />
+                            More <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${activeDropdown === 'analytics' ? 'rotate-180' : 'rotate-0'}`} />
                         </button>
                         {activeDropdown === 'analytics' && (
                             <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white  focus:outline-none z-50">

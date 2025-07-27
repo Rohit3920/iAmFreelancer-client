@@ -61,7 +61,7 @@ function ChatUI() {
                     toast.error('Failed to load conversations.');
                 });
         }
-    }, [currentUser, messageUserId]);
+    }, [currentUser, messageUserId, navigate]);
 
     useEffect(() => {
         if (!currentUser || !currentUser._id) return;
@@ -131,8 +131,13 @@ function ChatUI() {
     };
 
     return (
-        <div className="flex h-125 bg-gray-100 font-inter">
-            <div className="w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col shadow-lg">
+        <div className="flex flex-col md:flex-row h-screen bg-gray-100 font-inter overflow-hidden">
+            {/* Left Panel: Conversations List */}
+            <div className={`
+                w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col shadow-lg
+                ${selectedConversation ? 'hidden md:flex' : 'flex'} 
+                h-full
+            `}>
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-center text-gray-800">Messaging</h2>
                 </div>
@@ -145,8 +150,6 @@ function ChatUI() {
                             placeholder="Search messages"
                             className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
-                        <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                        </button>
                     </div>
                 </div>
 
@@ -157,7 +160,10 @@ function ChatUI() {
                         conversationsUsers.map((conv) => (
                             <div
                                 key={conv._id}
-                                className={`flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${selectedConversation?._id === conv._id ? 'bg-blue-50 border-l-4 border-blue-600' : ''}`}
+                                className={`
+                                    flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50
+                                    ${selectedConversation?._id === conv._id ? 'bg-blue-50 border-l-4 border-blue-600' : ''}
+                                `}
                                 onClick={() => setSelectedConversation(conv)}
                             >
                                 <div className="relative flex-shrink-0">
@@ -179,11 +185,22 @@ function ChatUI() {
                 </div>
             </div>
 
-            <div className="flex-1 flex flex-col bg-white shadow-lg rounded-r-lg md:rounded-l-none">
+            {/* Right Panel: Chat Messages */}
+            <div className={`
+                flex-1 flex flex-col bg-white shadow-lg rounded-r-lg md:rounded-l-none
+                ${selectedConversation ? 'flex' : 'hidden md:flex'}
+                h-full
+            `}>
                 {selectedConversation ? (
                     <>
                         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                             <div className="flex items-center">
+                                <button 
+                                    className="md:hidden mr-3 text-gray-600 hover:text-gray-900"
+                                    onClick={() => setSelectedConversation(null)} // Back button for mobile
+                                >
+                                    &larr;
+                                </button>
                                 <img
                                     src={selectedConversation.profilePicture || 'https://placehold.co/40x40/CCCCCC/666666?text=User'}
                                     alt={selectedConversation.username}
@@ -204,7 +221,7 @@ function ChatUI() {
                                     className={`flex ${msg.sender === currentUser._id ? 'justify-end' : 'justify-start'}`}
                                 >
                                     <div
-                                        className={`max-w-xs px-4 py-2 rounded-lg shadow ${msg.sender === currentUser._id
+                                        className={`max-w-xs sm:max-w-sm md:max-w-md px-4 py-2 rounded-lg shadow ${msg.sender === currentUser._id
                                                 ? 'bg-blue-600 text-white'
                                                 : 'bg-gray-300 text-gray-800'
                                             }`}
