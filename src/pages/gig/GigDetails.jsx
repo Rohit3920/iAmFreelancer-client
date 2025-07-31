@@ -119,7 +119,7 @@ function GigDetails() {
                                     <img
                                         src={image}
                                         alt={`Gig Image ${index + 1}`}
-                                        className="h-full object-contain max-w-full"
+                                        className="h-full object-contain w-full"
                                         onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/900x500/E0E0E0/666666?text=Image+Error'; }}
                                     />
                                 </div>

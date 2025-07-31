@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Heart } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { toast, ToastContainer } from 'react-toastify';
@@ -28,14 +28,12 @@ function Navbar() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
 
-    // --- Search State ---
     const [searchTerm, setSearchTerm] = useState('');
-    const [searchResults, setSearchResults] = useState(null); // { gigs: [], users: [], orders: [] }
+    const [searchResults, setSearchResults] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
     const searchInputRef = useRef(null);
     const searchResultsRef = useRef(null);
 
-    // Debounce function for search input
     const debounce = (func, delay) => {
         let timeout;
         return function(...args) {
@@ -45,7 +43,6 @@ function Navbar() {
         };
     };
 
-    // Universal search API call
     const performUniversalSearch = useCallback(debounce(async (query) => {
         if (query.length === 0) {
             setSearchResults(null);
@@ -56,13 +53,12 @@ function Navbar() {
         setIsSearching(true);
         try {
             const res = await api.get(`/api/search/universal?q=${query}`);
-            // Filter users to only include freelancers
             const filteredUsers = res.data.data.users.filter(u => u.userRole === 'freelancer');
 
             setSearchResults({
                 gigs: res.data.data.gigs,
                 orders: res.data.data.orders,
-                users: filteredUsers // Only freelancers
+                users: filteredUsers
             });
         } catch (error) {
             console.error('Error during universal search:', error);
@@ -71,25 +67,23 @@ function Navbar() {
         } finally {
             setIsSearching(false);
         }
-    }, 300), []); // Debounce by 300ms
+    }, 300), []);
 
     useEffect(() => {
         performUniversalSearch(searchTerm);
     }, [searchTerm, performUniversalSearch]);
 
-    // Handle search input change
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
     };
 
-    // Close search results when clicking outside
     useEffect(() => {
         const handleClickOutsideSearch = (event) => {
             if (
                 searchInputRef.current && !searchInputRef.current.contains(event.target) &&
                 searchResultsRef.current && !searchResultsRef.current.contains(event.target)
             ) {
-                setSearchTerm(''); // Clear search term to hide results
+                setSearchTerm('');
                 setSearchResults(null);
             }
         };
@@ -100,7 +94,6 @@ function Navbar() {
         };
     }, []);
 
-    // --- Existing Navbar Logic ---
     useEffect(() => {
         if (userId) {
             api.get(`api/auth/${userId}`)
@@ -181,16 +174,15 @@ function Navbar() {
         navigate(path);
     };
 
-    // Function to handle clicking on a search result
     const handleSearchResultClick = (path) => {
         navigate(path);
-        setSearchTerm(''); // Clear search term to hide results
+        setSearchTerm('');
         setSearchResults(null);
     };
 
 
     return (
-        <nav className="bg-white w-full pt-4 shadow-sm px-4 sm:px-6 lg:px-8 fixed top-0 left-0 z-20"> {/* Increased z-index */}
+        <nav className="bg-white w-full pt-4 shadow-sm px-4 sm:px-6 lg:px-8 fixed top-0 left-0 z-20">
             <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
             <div className="container mx-auto flex justify-between items-center flex-wrap">
                 <div className="flex-shrink-0 mr-6">
@@ -199,7 +191,7 @@ function Navbar() {
                     </Link>
                 </div>
 
-                <div className="flex-grow max-w-xl mx-auto relative hidden md:block"> {/* Added relative for search results positioning */}
+                <div className="flex-grow max-w-xl mx-auto relative hidden md:block">
                     <div className="relative flex items-center w-full rounded-md shadow-sm" ref={searchInputRef}>
                         <input
                             type="text"
@@ -265,7 +257,7 @@ function Navbar() {
                                                     <img src={userItem.profilePicture || 'https://placehold.co/40x40/CCCCCC/666666?text=User'} alt={userItem.username} className="w-10 h-10 rounded-full object-cover mr-3" />
                                                     <div>
                                                         <p className="font-medium">{userItem.username}</p>
-                                                        <p className="text-gray-500 text-xs">{userItem.DomainDetail[0]?.freelancerDomain}</p> {/* Display domain if available */}
+                                                        <p className="text-gray-500 text-xs">{userItem.DomainDetail[0]?.freelancerDomain}</p>
                                                     </div>
                                                 </Link>
                                             ))}
@@ -332,6 +324,13 @@ function Navbar() {
                     className={`${isMenuOpen ? 'block' : 'hidden'} w-full md:flex md:items-center md:w-auto mt-4 md:mt-0`}
                 >
                     <ul className="flex flex-col md:flex-row md:space-x-8 space-y-2 md:space-y-0 items-center">
+                        {isLoggedIn && (
+                            <li className='md:ml-3'>
+                                <Link to="/liked-gigs" className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out">
+                                    <Heart className="h-5 w-5 mr-1" />
+                                </Link>
+                            </li>
+                        )}
                         <li className='md:ml-3'>
                             <Link to="#" className="text-gray-700 hover:text-blue-600 font-medium transition duration-300 ease-in-out">
                                 Become a Freelancer
@@ -376,7 +375,7 @@ function Navbar() {
                                                         <strong className="block truncate">{user.username}<small> ( {user.userRole} ) </small></strong>
                                                     </div>
                                                     <Link
-                                                        to={`/view-user-profile/${userId}`}
+                                                        to={`/profile/${userId}`}
                                                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition duration-150 ease-in-out"
                                                         onClick={() => handleProfileLinkClick(`/profile/${userId}`)}
                                                     >
@@ -428,7 +427,7 @@ function Navbar() {
                                     }
                                     <Link to={`/profile/${userId}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Profile</Link>
                                     {
-                                        user?.userRole === "freelancer" && <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Earnings</Link>
+                                        user?.userRole === "freelancer" && <Link to="/My-Earning" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={closeDropdown}>Earnings</Link>
                                     }
                                 </div>
                             </div>

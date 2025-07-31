@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function PurchasedGigsList({ gigs }) {
-    console.log(gigs);
     const navigate = useNavigate();
 
     return (

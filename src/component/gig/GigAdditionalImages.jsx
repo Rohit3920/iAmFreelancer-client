@@ -62,7 +62,7 @@ function GigAdditionalImages({ formData, handleMultiFileChange }) {
 
     const handleFileSelect = async (e) => {
         const selectedFile = e.target.files[0];
-        e.target.value = ''; 
+        e.target.value = '';
 
         if (!selectedFile) {
             setError('No file selected.');
@@ -135,11 +135,10 @@ function GigAdditionalImages({ formData, handleMultiFileChange }) {
             <button
                 type="button"
                 onClick={triggerFileInput}
-                className={`mt-1 px-4 py-2 border rounded-lg shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                    additionalImageUrls.length >= 3 || isUploading
+                className={`mt-1 px-4 py-2 border rounded-lg shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${additionalImageUrls.length >= 3 || isUploading
                         ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                         : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
-                }`}
+                    }`}
                 disabled={additionalImageUrls.length >= 3 || isUploading}
             >
                 {isUploading ? 'Uploading...' : 'Add Image'}
@@ -156,7 +155,7 @@ function GigAdditionalImages({ formData, handleMultiFileChange }) {
                             className="w-full h-full object-contain"
                             onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/300x300/CCCCCC/666666?text=Image+Error'; }}
                         />
-                         <button
+                        <button
                             type="button"
                             onClick={() => removeImage(additionalImageUrls[currentImageIndex])}
                             className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 text-xs leading-none"

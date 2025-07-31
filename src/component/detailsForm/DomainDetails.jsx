@@ -105,12 +105,12 @@ const DomainDetails = forwardRef(({ nextClick, myFormData }, ref) => {
         }
     }));
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const userId = localStorage.getItem('userId')
-        const res = api.put(`/api/auth/${userId}`, {DomainDetail : formData})
+        const res = await api.put(`/api/auth/${userId}`, {DomainDetail : formData})
         console.log(res)
-        if (ref.current && ref.current.validateAndGetData()) {
+        if (ref?.current && ref?.current.validateAndGetData()) {
             nextClick();
         }
     };
@@ -223,7 +223,6 @@ const DomainDetails = forwardRef(({ nextClick, myFormData }, ref) => {
                     </button>
                 </form>
             </div>
-            <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         </div>
     );
 });

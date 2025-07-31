@@ -21,6 +21,10 @@ import Order from './pages/Order'
 import ViewOrder from './pages/order/ViewOrder'
 import Dashboard from './pages/dashboard/Dashboard'
 import CreateOrder from './pages/order/CreateOrder'
+import Breadcrumb from './component/breadcrumbs/Breadcrumb'
+import Footer from './component/Footer'
+import MyLikedGig from './pages/gig/myLikedGig'
+import MyEarning from './pages/MyEarning'
 
 function App() {
 
@@ -29,6 +33,7 @@ function App() {
       <Router>
         <Navbar />
         <div className="pb-28"></div>
+        <Breadcrumb />
         <Routes>
           <Route element={<ProtectRoute />}>
             <Route path="/" element={<Home />} />
@@ -43,6 +48,8 @@ function App() {
             <Route path="/update-gig/:gigId" element={<UpdateGig />} />
             {/* <Route path="/view-gigs" element={<GigList />} /> */}
             <Route path="/view-gigs/:userId" element={<GigList />} />
+            <Route path="/liked-gigs" element={<MyLikedGig />} />
+            <Route path="/My-Earning" element={<MyEarning />} />
             {/* <Route path="/:messageUserId/view-gigs/:gigId" element={<GigList />} /> */}
             <Route path="/view-gig/:gigId" element={<GigDetails />} />
 
@@ -61,6 +68,7 @@ function App() {
           <Route path="/forgetpassword" element={<ForgetPassword />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
+        <Footer />
       </Router>
     </div>
   )
