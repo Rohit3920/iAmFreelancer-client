@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import api from '../../utils/api'
 
 function EducationDetails({ nextClick, myFormData }) {
@@ -157,8 +157,6 @@ function EducationDetails({ nextClick, myFormData }) {
                     </button>
                 </form>
             </div>
-
-            <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         </div>
     );
 }

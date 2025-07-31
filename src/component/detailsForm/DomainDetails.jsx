@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import api from '../../utils/api'
 
 const DomainDetails = forwardRef(({ nextClick, myFormData }, ref) => {

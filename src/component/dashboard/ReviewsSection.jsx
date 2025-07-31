@@ -47,7 +47,6 @@ function ReviewsSection({ reviews }) {
                 <p className="text-gray-600 text-center py-4">You haven't submitted any reviews yet.</p>
             ) : (
                 <>
-                    {/* Mobile & Tablet View (list/card layout) */}
                     <div className="block lg:hidden">
                         {reviews.map((review) => (
                             <div key={review._id} className="border-b border-gray-200 py-4 last:border-b-0">
@@ -70,7 +69,6 @@ function ReviewsSection({ reviews }) {
                         ))}
                     </div>
 
-                    {/* Desktop View (table layout) */}
                     <div className="hidden lg:block overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">

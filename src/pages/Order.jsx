@@ -3,7 +3,7 @@ import api from '../utils/api';
 import { toast } from 'react-toastify';
 import OrderCard from '../component/OrderCard';
 import GigReview from '../component/review/GigReview';
-import { Search } from 'lucide-react'; // Import the Search icon
+import { Search } from 'lucide-react';
 
 function Order() {
     const [orders, setOrders] = useState([]);
@@ -12,10 +12,9 @@ function Order() {
     const [currentUser, setCurrentUser] = useState(null);
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [selectedOrderForReview, setSelectedOrderForReview] = useState(null);
-    const [searchTerm, setSearchTerm] = useState(''); // State for search term
+    const [searchTerm, setSearchTerm] = useState('');
     const userId = localStorage.getItem('userId');
 
-    // Debounce function to limit API calls on search input
     const debounce = (func, delay) => {
         let timeout;
         return function(...args) {
@@ -25,9 +24,8 @@ function Order() {
         };
     };
 
-    // Memoized and debounced function for fetching orders with search
     const fetchOrders = useCallback(debounce(async (currentUserId, userRole, query = '') => {
-        setLoading(true); // Start loading when a new fetch is initiated
+        setLoading(true);
         try {
             const searchParams = new URLSearchParams();
             if (userRole === 'client') {
@@ -47,24 +45,21 @@ function Order() {
             setError('Failed to load orders.');
             toast.error('Failed to load orders.');
         } finally {
-            setLoading(false); // End loading regardless of success or failure
+            setLoading(false);
         }
-    }, 300), []); // Debounce by 300ms
-
-    // Effect to fetch current user and then orders based on user role and search term
+    }, 300), []);
     useEffect(() => {
         const fetchUserAndOrders = async () => {
-            setLoading(true); // Set loading true while fetching user
+            setLoading(true);
             try {
                 const userRes = await api.get(`/api/auth/${userId}`);
                 setCurrentUser(userRes.data);
-                // Call the debounced fetchOrders function
                 fetchOrders(userRes.data._id, userRes.data.userRole, searchTerm);
             } catch (err) {
                 console.error('Error fetching user data or initial orders:', err);
                 setError('Failed to load user or order data.');
                 toast.error('Failed to load user or order data.');
-                setLoading(false); // Stop loading if there's an error in user fetch
+                setLoading(false);
             }
         };
 
@@ -75,13 +70,9 @@ function Order() {
             setError('User ID not found. Please log in.');
             toast.error('User not authenticated.');
         }
-    }, [userId, fetchOrders, searchTerm]); // `fetchOrders` and `searchTerm` are dependencies
-
-    // Handle changes in the search input
+    }, [userId, fetchOrders, searchTerm]); 
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
-        // The `useEffect` above will automatically re-trigger `fetchOrders` when `searchTerm` changes,
-        // and `fetchOrders` itself is debounced.
     };
 
     const handleStatusChange = async (orderId, newStatus) => {
@@ -124,16 +115,12 @@ function Order() {
         setSelectedOrderForReview(null);
     };
 
-    // Loading and error states are shown as overlays, but the header and search bar remain
-    // only the order list area is affected.
-    
     if (!currentUser) {
         return <div className="text-center text-red-500 py-4">User not authenticated.</div>;
     }
 
     return (
         <div className="container mx-auto px-4 py-8 min-h-screen">
-            {/* Header and Search Bar - Always Visible */}
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl font-semibold text-gray-900">
                     My Orders
@@ -152,7 +139,6 @@ function Order() {
                 </div>
             </div>
 
-            {/* Review Form Modal */}
             {showReviewForm && selectedOrderForReview && (
                 <div className='size-full bg-blue-200'>
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
@@ -169,7 +155,6 @@ function Order() {
                 </div>
             )}
 
-            {/* Order List Area - This is where loading/error states will appear */}
             {loading ? (
                 <div className="flex justify-center items-center py-12">
                     <div className="text-center text-lg font-medium text-gray-700">Loading orders...</div>

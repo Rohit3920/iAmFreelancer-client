@@ -1,8 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-
+import { useNavigate } from 'react-router-dom';
 function OrdersList({ orders }) {
-    const navigate = useNavigate(); // Initialize useNavigate hook
+    const navigate = useNavigate();
 
     const handleViewOrder = (orderId) => {
         navigate(`/view-order/${orderId}`);
@@ -13,7 +12,7 @@ function OrdersList({ orders }) {
             {orders.length === 0 ? (
                 <p className="text-gray-600 text-center py-4">No orders found for your gigs.</p>
             ) : (
-                <div className="overflow-x-auto"> {/* Added for horizontal scrolling on small screens */}
+                <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>

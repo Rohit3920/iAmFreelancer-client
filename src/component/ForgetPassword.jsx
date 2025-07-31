@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import OldPassChange from './forgetPassword/oldPassChange';
+import OldPassChange from './forgetPassword/OldPassChange';
 import api from '../utils/api';
 
 function ForgetPassword() {

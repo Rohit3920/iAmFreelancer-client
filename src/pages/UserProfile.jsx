@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Mail, Briefcase, MapPin, GraduationCap, Code, User } from 'lucide-react';
 
@@ -107,7 +107,6 @@ function UserProfile() {
 
     return (
         <div className="min-h-screen w-full bg-gray-100 py-8 px-0 sm:px-6 lg:px-8 flex justify-center items-start">
-            <ToastContainer />
             <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-xl overflow-hidden md:flex">
                 <div className="md:flex-shrink-0 p-6 bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex flex-col items-center justify-center relative">
                     <div className="relative mb-4">

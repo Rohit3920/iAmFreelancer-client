@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Heart } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const ChevronDown = ({ className }) => (
@@ -183,7 +183,6 @@ function Navbar() {
 
     return (
         <nav className="bg-white w-full pt-4 shadow-sm px-4 sm:px-6 lg:px-8 fixed top-0 left-0 z-20">
-            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
             <div className="container mx-auto flex justify-between items-center flex-wrap">
                 <div className="flex-shrink-0 mr-6">
                     <Link to="/" className="text-gray-800 text-3xl font-bold">
