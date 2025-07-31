@@ -23,7 +23,7 @@ import Dashboard from './pages/dashboard/Dashboard'
 import CreateOrder from './pages/order/CreateOrder'
 import Breadcrumb from './component/breadcrumbs/Breadcrumb'
 import Footer from './component/Footer'
-import MyLikedGig from './pages/gig/myLikedGig'
+import MyLikedGig from './pages/gig/MyLikedGig'
 import MyEarning from './pages/MyEarning'
 
 function App() {
