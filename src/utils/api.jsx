@@ -1,5 +1,5 @@
 import axios from 'axios';
-export let URL = 'https://i-am-freelancer.vercel.app'
+export let URL = 'https://iamfreelancer-server.onrender.com'
 // export let URL = 'http://localhost:5000'
 
 const token = localStorage.getItem('token')
