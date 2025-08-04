@@ -1,5 +1,6 @@
 import axios from 'axios';
-export let URL = 'http://localhost:5000'
+export let URL = 'https://i-am-freelancer.vercel.app/'
+// export let URL = 'http://localhost:5000'
 
 const token = localStorage.getItem('token')
 const api = axios.create({
