@@ -4,6 +4,7 @@ import ClientDashboard from './ClientDashboard';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
+import Footer from '../../component/Footer';
 
 function Dashboard() {
     const userId = localStorage.getItem('userId');
@@ -61,6 +62,7 @@ function Dashboard() {
             ) : (
                 <p className="text-gray-600">User role not recognized.</p>
             )}
+            <Footer />
         </div>
     );
 }

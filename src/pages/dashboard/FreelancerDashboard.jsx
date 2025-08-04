@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-
 import MyGigsList from '../../component/dashboard/MyGigsList';
 import OrdersList from '../../component/dashboard/OrdersList';
 import EarningsSummary from '../../component/dashboard/EarningsSummary';
@@ -75,7 +74,9 @@ function FreelancerDashboard() {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen bg-gray-50">
-                <div className="text-center text-lg font-medium text-gray-700">Loading freelancer dashboard...</div>
+                <div className="text-center text-lg font-medium text-gray-700">
+                    Loading freelancer dashboard...
+                </div>
             </div>
         );
     }
@@ -90,10 +91,31 @@ function FreelancerDashboard() {
 
     return (
         <div className="container mx-auto px-4 py-8 min-h-screen">
-            <h1 className="text-4xl font-semibold text-gray-900 mb-8">
-                Freelancer Dashboard
-            </h1>
+            {/* Top Stats Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                    <h3 className="text-gray-600 font-medium">Pending Clearance</h3>
+                    <p className="text-yellow-600 font-bold text-2xl">
+                        ${earnings.pending.toFixed(2)}
+                    </p>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                    <h3 className="text-gray-600 font-medium">Total Earnings</h3>
+                    <p className="text-green-600 font-bold text-2xl">
+                        ${earnings.total.toFixed(2)}
+                    </p>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                    <h3 className="text-gray-600 font-medium">My Gigs</h3>
+                    <p className="text-indigo-600 font-bold text-2xl">{gigs.length}</p>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                    <h3 className="text-gray-600 font-medium">Total Orders</h3>
+                    <p className="text-blue-600 font-bold text-2xl">{orders.length}</p>
+                </div>
+            </div>
 
+            {/* Main Content Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div className="col-span-1 lg:col-span-2 flex flex-col">
                     <h2 className="text-3xl font-medium text-gray-800 mb-6">My Gigs</h2>
@@ -103,8 +125,11 @@ function FreelancerDashboard() {
                 </div>
                 <div className="col-span-1 flex flex-col">
                     <h2 className="text-3xl font-medium text-gray-800 mb-6">Earnings</h2>
-                    <div className="flex-grow h-96 border-2 border-indigo-400 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                        <EarningsSummary earnings={earnings} completedOrderData={completedOrderData} />
+                    <div className="flex-grow h-96 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+                        <EarningsSummary
+                            earnings={earnings}
+                            completedOrderData={completedOrderData}
+                        />
                     </div>
                 </div>
                 <div className="col-span-full">

@@ -11,12 +11,6 @@ function Profile() {
     const [viewAddress, setViewAddress] = useState(false);
     const [viewEducation, setViewEducation] = useState(false);
     const [viewDomainDetail, setViewDomainDetail] = useState(false);
-    // const [view, setView] = useState({
-    //     basic: false,
-    //     address: false,
-    //     education: false,
-    //     domainDetail: false,
-    // });
     const validId = localStorage.getItem('userId');
 
     useEffect(() => {
@@ -106,9 +100,16 @@ function Profile() {
                         </nav>
 
                         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+                            {
+                                userData.userRole == 'freelancer' ? 
                             <h1 className="text-2xl font-bold text-gray-800 mb-2">
                                 Hi! I'm {user.username}, 👋 Let's help freelancers get to know you
                             </h1>
+                            :
+                            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                                Hi! Mr/Miss {user.username}, 👋 Freelancers will always help you. 
+                            </h1>
+                            }
                             <p className="text-gray-600">
                                 {user.description ? user.description : 'Get the most out of iAmFreelancer by sharing a bit more about yourself and how you prefer to work with freelancers.'}
                             </p>
