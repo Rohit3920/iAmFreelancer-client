@@ -13,8 +13,8 @@ import filterData from '../utils/gigCoreData.json';
 
 function Home() {
     const navigate = useNavigate();
-    const [currentUser, setCurrentUser] = useState();
-    const [popularUsers, setPopularUsers] = useState();
+    const [currentUser, setCurrentUser] = useState(null);
+    const [popularUsers, setPopularUsers] = useState([]);
     const [popularGig, setPopularGig] = useState([]);
     const [exploringGig, setExploringGig] = useState([]);
     const [filteredGigsData, setFilteredGigsData] = useState([]);
@@ -47,11 +47,7 @@ function Home() {
     ];
 
     const handleFilterChange = (filterType, value) => {
-        if (filterType === 'mainCategory') {
-            setSelectedFilters({ ...selectedFilters, mainCategory: value });
-        } else if (filterType === 'priceRange') {
-            setSelectedFilters({ ...selectedFilters, priceRange: value });
-        }
+        setSelectedFilters(prevState => ({ ...prevState, [filterType]: value }));
     };
 
     const handleFilterToggle = (filterType) => {
@@ -70,24 +66,6 @@ function Home() {
             timeout = setTimeout(() => func.apply(context, args), delay);
         };
     };
-
-    useEffect(() => {
-        const handleClickOutsideSearch = (event) => {
-            if (
-                searchInputRef.current &&
-                !searchInputRef.current.contains(event.target) &&
-                searchResultsRef.current &&
-                !searchResultsRef.current.contains(event.target)
-            ) {
-                setSearchTerm('');
-                setSearchResults(null);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutsideSearch);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutsideSearch);
-        };
-    }, []);
 
     const performUniversalSearch = useCallback(
         debounce(async (query) => {
@@ -110,15 +88,32 @@ function Home() {
                     users: filteredUsers,
                 });
             } catch (error) {
-                console.error('Error during universal search:', error);
-                setSearchResults(null);
                 toast.error('Failed to fetch search results.');
+                console.warn(error)
             } finally {
                 setIsSearching(false);
             }
         }, 300),
         []
     );
+
+    useEffect(() => {
+        const handleClickOutsideSearch = (event) => {
+            if (
+                searchInputRef.current &&
+                !searchInputRef.current.contains(event.target) &&
+                searchResultsRef.current &&
+                !searchResultsRef.current.contains(event.target)
+            ) {
+                setSearchTerm('');
+                setSearchResults(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutsideSearch);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutsideSearch);
+        };
+    }, []);
 
     useEffect(() => {
         performUniversalSearch(searchTerm);
@@ -155,36 +150,38 @@ function Home() {
         setFilteredGigsData(tempFilteredGigs);
     }, [selectedFilters, exploringGig]);
 
-
     useEffect(() => {
-        async function fetchData() {
+        const fetchData = async () => {
             try {
-                const userRes = await api.get(`api/auth/${userId}`);
-                setCurrentUser(userRes.data);
+                const [userRes, gigsRes, usersRes] = await Promise.all([
+                    userId ? api.get(`api/auth/${userId}`) : Promise.resolve(null),
+                    api.get('/api/gig'),
+                    api.get('api/auth/'),
+                ]);
+
+                if (userRes) {
+                    setCurrentUser(userRes.data);
+                }
+
+                if (gigsRes) {
+                    setExploringGig(gigsRes.data);
+                    const sortedGigs = gigsRes.data.sort((a, b) => {
+                        const ratingA = a.starNumber > 0 ? a.totalStars / a.starNumber : 0;
+                        const ratingB = b.starNumber > 0 ? b.totalStars / b.starNumber : 0;
+                        return ratingB - ratingA;
+                    });
+                    setPopularGig(sortedGigs.slice(0, 20));
+                }
+
+                if (usersRes) {
+                    setPopularUsers(usersRes.data.slice(0, 20));
+                }
+
             } catch (err) {
-                console.error('Error fetching user data:', err);
-                setCurrentUser(null);
+                console.error('Error fetching data:', err);
+                toast.error('Failed to load data.');
             }
-            try {
-                const gigRes = await api.get('/api/gig');
-                setExploringGig(gigRes.data);
-                const sortedGigs = gigRes.data.sort((a, b) => {
-                    const ratingA = a.starNumber > 0 ? a.totalStars / a.starNumber : 0;
-                    const ratingB = b.starNumber > 0 ? b.totalStars / b.starNumber : 0;
-                    return ratingB - ratingA;
-                });
-                setPopularGig(sortedGigs.slice(0, 20));
-            } catch (err) {
-                console.error('Error fetching gig data:', err);
-                setPopularGig(null);
-            }
-            try {
-                const usersRes = await api.get(`api/auth/`);
-                setPopularUsers(usersRes.data.slice(0, 20));
-            } catch (err) {
-                console.error('Error fetching user data:', err);
-            }
-        }
+        };
         fetchData();
     }, [userId]);
 
@@ -229,15 +226,12 @@ function Home() {
                     <input
                         type="text"
                         placeholder="Search gigs, freelancers, orders..."
-                        className="block w-full pl-4 pr-12 py-2 border border-gray-300 rounded-l-md
-                                         focus:outline-none focus:border-transparent text-gray-700 placeholder-gray-500"
+                        className="block w-full pl-4 pr-12 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:border-transparent text-gray-700 placeholder-gray-500"
                         value={searchTerm}
                         onChange={handleSearchChange}
                     />
                     <button
-                        className="absolute inset-y-0 right-0 px-4 bg-gray-800 text-white rounded-r-md
-                                         hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-700
-                                         focus:border-transparent"
+                        className="absolute inset-y-0 right-0 px-4 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:border-transparent"
                     >
                         {isSearching ? (
                             <svg
@@ -257,10 +251,7 @@ function Home() {
                                 <path
                                     className="opacity-75"
                                     fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0
-                                         5.373 0 12h4zm2 5.291A7.962 7.962
-                                         0 014 12H0c0 3.042 1.135 5.824
-                                         3 7.938l3-2.647z"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                 ></path>
                             </svg>
                         ) : (
@@ -271,8 +262,7 @@ function Home() {
 
                 {searchTerm.length > 0 && searchResults && (
                     <div
-                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 
-                                         rounded-md shadow-lg z-50 max-h-80 overflow-y-auto md:hidden"
+                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto md:hidden"
                         ref={searchResultsRef}
                     >
                         {searchResults.gigs.length === 0 &&
@@ -294,28 +284,16 @@ function Home() {
                                                 key={gig._id}
                                                 to={`/view-gig/${gig._id}`}
                                                 className="flex items-center px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 transition duration-150 ease-in-out"
-                                                onClick={() =>
-                                                    handleSearchResultClick(
-                                                        `/view-gig/${gig._id}`
-                                                    )
-                                                }
+                                                onClick={() => handleSearchResultClick(`/view-gig/${gig._id}`)}
                                             >
                                                 <img
-                                                    src={
-                                                        gig.cover ||
-                                                        'https://placehold.co/40x40/DDDDDD/666666?text=Gig'
-                                                    }
+                                                    src={gig.cover || 'https://placehold.co/40x40/DDDDDD/666666?text=Gig'}
                                                     alt={gig.title}
                                                     className="w-10 h-10 object-cover rounded mr-3"
                                                 />
                                                 <div>
-                                                    <p className="font-medium">
-                                                        {gig.title}
-                                                    </p>
-                                                    <p className="text-gray-500 text-xs">
-                                                        ${gig.price} by{' '}
-                                                        {gig.userId?.username}
-                                                    </p>
+                                                    <p className="font-medium">{gig.title}</p>
+                                                    <p className="text-gray-500 text-xs">${gig.price} by {gig.userId?.username}</p>
                                                 </div>
                                             </Link>
                                         ))}
@@ -332,30 +310,17 @@ function Home() {
                                                 key={userItem._id}
                                                 to={`/view-user-profile/${userItem._id}`}
                                                 className="flex items-center px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 transition duration-150 ease-in-out"
-                                                onClick={() =>
-                                                    handleSearchResultClick(
-                                                        `/view-user-profile/${userItem._id}`
-                                                    )
-                                                }
+                                                onClick={() => handleSearchResultClick(`/view-user-profile/${userItem._id}`)}
                                             >
                                                 <img
-                                                    src={
-                                                        userItem.profilePicture ||
-                                                        'https://placehold.co/40x40/CCCCCC/666666?text=User'
-                                                    }
+                                                    src={userItem.profilePicture || 'https://placehold.co/40x40/CCCCCC/666666?text=User'}
                                                     alt={userItem.username}
                                                     className="w-10 h-10 rounded-full object-cover mr-3"
                                                 />
                                                 <div>
-                                                    <p className="font-medium">
-                                                        {userItem.username}
-                                                    </p>
+                                                    <p className="font-medium">{userItem.username}</p>
                                                     <p className="text-gray-500 text-xs">
-                                                        {
-                                                            userItem
-                                                                .DomainDetail[0]
-                                                                ?.freelancerDomain
-                                                        }
+                                                        {userItem.DomainDetail?.[0]?.freelancerDomain}
                                                     </p>
                                                 </div>
                                             </Link>
@@ -373,29 +338,17 @@ function Home() {
                                                 key={order._id}
                                                 to={`/order/${order._id}`}
                                                 className="flex items-center px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 transition duration-150 ease-in-out"
-                                                onClick={() =>
-                                                    handleSearchResultClick(
-                                                        `/order/${order._id}`
-                                                    )
-                                                }
+                                                onClick={() => handleSearchResultClick(`/order/${order._id}`)}
                                             >
                                                 <img
-                                                    src={
-                                                        order.gigId?.cover ||
-                                                        'https://placehold.co/40x40/DDDDDD/666666?text=Order'
-                                                    }
+                                                    src={order.gigId?.cover || 'https://placehold.co/40x40/DDDDDD/666666?text=Order'}
                                                     alt={order.gigId?.title}
                                                     className="w-10 h-10 object-cover rounded mr-3"
                                                 />
                                                 <div>
-                                                    <p className="font-medium truncate">
-                                                        {order.gigId?.title}
-                                                    </p>
+                                                    <p className="font-medium truncate">{order.gigId?.title}</p>
                                                     <p className="text-gray-500 text-xs">
-                                                        Status: {order.status} |
-                                                        Client:{' '}
-                                                        {order.clientId
-                                                            ?.username}
+                                                        Status: {order.status} | Client: {order.clientId?.username}
                                                     </p>
                                                 </div>
                                             </Link>
@@ -416,7 +369,6 @@ function Home() {
             </div>
 
             <div className="flex flex-col md:flex-row mx-auto max-w-7xl mt-4 gap-4">
-                {/* Toggle Filter Button for smaller screens */}
                 <div className="flex justify-end mb-4 md:hidden">
                     <button
                         onClick={toggleFilterVisibility}
@@ -427,11 +379,9 @@ function Home() {
                     </button>
                 </div>
 
-                {/* Filter Sidebar */}
                 <div className={`w-full md:w-1/5 bg-white p-4 shadow-md rounded-lg transition-all duration-300 ease-in-out md:sticky md:top-0 md:self-start md:h-[calc(100vh-100px)] md:overflow-y-auto ${showFilters ? 'block' : 'hidden md:block'}`}>
                     <h2 className="text-lg font-bold mb-4 text-black">Filters & Explore</h2>
 
-                    {/* Main Category Filter */}
                     <div className="mb-6">
                         <div className="flex justify-between items-center mb-2 cursor-pointer" onClick={() => handleFilterToggle('mainCategory')}>
                             <span className="text-base font-semibold text-gray-800">Category</span>
@@ -445,7 +395,7 @@ function Home() {
                                         className={`p-2 rounded-md cursor-pointer text-sm ${selectedFilters.mainCategory === cat.main ? 'bg-blue-100 text-blue-800 font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
                                         onClick={() => {
                                             handleFilterChange('mainCategory', cat.main);
-                                            setOpenFilter({ mainCategory: false, priceRange: openFilter.priceRange }); // Keep other filters open/closed as they were
+                                            setOpenFilter({ mainCategory: false, priceRange: openFilter.priceRange });
                                         }}
                                     >
                                         {cat.main}
@@ -455,7 +405,6 @@ function Home() {
                         )}
                     </div>
 
-                    {/* Price Range Filter */}
                     <div className="mb-6">
                         <div className="flex justify-between items-center mb-2 cursor-pointer" onClick={() => handleFilterToggle('priceRange')}>
                             <span className="text-base font-semibold text-gray-800">Price</span>
@@ -477,13 +426,12 @@ function Home() {
                     </div>
                 </div>
 
-                {/* Main Content Area */}
                 <div className={`w-full ${showFilters ? 'md:w-4/5' : 'md:w-full'}`}>
                     {isFilterActive ? (
                         <>
                             <KeepExploring exploringGig={filteredGigsData} />
-                            <PopularFreelancer popularUsers={popularUsers} />
                             <TopGigs popularGig={filteredGigsData} />
+                            <PopularFreelancer popularUsers={popularUsers} />
                         </>
                     ) : (
                         <>

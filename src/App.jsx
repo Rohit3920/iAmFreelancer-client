@@ -26,14 +26,14 @@ import MyEarning from './pages/MyEarning';
 import Sidebar from './component/Sidebar';
 
 function App() {
-  const navbarHeight = '60px';
+  const navbarHeight = '50px';
   const breadcrumbHeight = '48px';
   // const sidebarWidth = '80px';
 
   return (
     <div className="text-center mx-auto h-screen flex flex-col">
       <Router>
-        <Navbar className="fixed top-0 left-0 right-0 z-250" />
+        <Navbar className="fixed top-0 left-0 right-0 z-400" />
 
         {/* Desktop sidebar */}
         <div

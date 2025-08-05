@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import socket from '../../utils/SocketIO';
 import api from '../../utils/api';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Search, MoreHorizontal, Send } from 'lucide-react';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 function ChatUI() {
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
-    const [conversationsUsers, setConversationsUsers] = useState([]);
+    const [conversations, setConversations] = useState([]);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef(null);
@@ -19,67 +18,68 @@ function ChatUI() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (messageUserId) {
-            api.get(`api/auth/${messageUserId}`)
-                .then(res => {
-                    setSelectedConversation(res.data);
-                })
-                .catch(e => {
-                    console.error('Error fetching user for direct message:', e);
-                    toast.error('Failed to load user for direct message.');
-                });
+        if (!userId) {
+            navigate('/login');
+            return;
         }
-    }, [messageUserId]);
+
+        const fetchCurrentUser = async () => {
+            try {
+                const response = await api.get(`/api/auth/${userId}`);
+                setCurrentUser(response.data);
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+                toast.error('Failed to load user data.');
+            }
+        };
+        fetchCurrentUser();
+    }, [userId, navigate]);
 
     useEffect(() => {
-        if (userId) {
-            api.get(`/api/auth/${userId}`)
-                .then(response => {
-                    setCurrentUser(response.data);
-                })
-                .catch(error => {
-                    console.error('Error fetching current user:', error);
-                    toast.error('Failed to load current user data.');
-                });
-        }
-    }, [userId]);
+        if (!currentUser) return;
 
-    useEffect(() => {
-        if (currentUser && currentUser._id) {
-            api.get(`/api/messages/${currentUser._id}`)
-                .then(response => {
-                    setConversationsUsers(response.data);
-                    if (messageUserId) {
-                        const directMessageUser = response.data.find(conv => conv._id === messageUserId);
-                        if (directMessageUser) {
-                            setSelectedConversation(directMessageUser);
-                        }
+        const fetchConversations = async () => {
+            try {
+                const response = await api.get(`/api/messages/${currentUser._id}`);
+                setConversations(response.data);
+
+                if (messageUserId) {
+                    const directMessageUser = response.data.find(conv => conv._id === messageUserId);
+                    if (directMessageUser) {
+                        setSelectedConversation(directMessageUser);
+                    } else {
+                        const userResponse = await api.get(`api/auth/${messageUserId}`);
+                        setSelectedConversation(userResponse.data);
                     }
-                })
-                .catch(error => {
-                    console.error('Error fetching conversation users:', error);
-                    toast.error('Failed to load conversations.');
-                });
-        }
-    }, [currentUser, messageUserId, navigate]);
+                }
+            } catch (error) {
+                console.error('Error fetching conversations:', error);
+                toast.error('Failed to load conversations.');
+            }
+        };
+        fetchConversations();
+    }, [currentUser, messageUserId]);
 
     useEffect(() => {
-        if (!currentUser || !currentUser._id) return;
+        if (!currentUser) return;
 
         socket.connect();
         socket.emit('joinRoom', currentUser._id);
 
         const handleReceiveMessage = (message) => {
-            if (selectedConversation &&
-                ((message.sender === currentUser._id && message.receiver === selectedConversation._id) ||
-                    (message.sender === selectedConversation._id && message.receiver === currentUser._id))
-            ) {
-                setMessages((prevMessages) => [...prevMessages, message]);
-            }
+            setMessages(prevMessages => {
+                if (
+                    selectedConversation &&
+                    ((message.sender === currentUser._id && message.receiver === selectedConversation._id) ||
+                        (message.sender === selectedConversation._id && message.receiver === currentUser._id))
+                ) {
+                    return [...prevMessages, message];
+                }
+                return prevMessages;
+            });
         };
 
         socket.on('receiveMessage', handleReceiveMessage);
-
         socket.on('messageError', (errorMsg) => {
             toast.error(errorMsg);
         });
@@ -92,29 +92,29 @@ function ChatUI() {
     }, [currentUser, selectedConversation]);
 
     useEffect(() => {
-        if (currentUser && currentUser._id && selectedConversation && selectedConversation._id) {
-            const fetchHistory = async () => {
-                try {
-                    const response = await api.get(`/api/messages/${currentUser._id}/${selectedConversation._id}`);
-                    setMessages(response.data);
-                } catch (err) {
-                    toast.error('Failed to load message history.');
-                    console.error('Error fetching message history:', err);
-                }
-            };
-            fetchHistory();
-        } else {
-            setMessages([]);
-        }
+        const fetchHistory = async () => {
+            if (!currentUser || !selectedConversation) {
+                setMessages([]);
+                return;
+            }
+            try {
+                const response = await api.get(`/api/messages/${currentUser._id}/${selectedConversation._id}`);
+                setMessages(response.data);
+            } catch (err) {
+                toast.error('Failed to load message history.');
+                console.error('Error fetching message history:', err);
+            }
+        };
+        fetchHistory();
     }, [selectedConversation, currentUser]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const handleSendMessage = (e) => {
+    const handleSendMessage = useCallback((e) => {
         e.preventDefault();
-        if (newMessage.trim() && selectedConversation && currentUser && currentUser._id) {
+        if (newMessage.trim() && selectedConversation && currentUser) {
             const messageData = {
                 senderId: currentUser._id,
                 receiverId: selectedConversation._id,
@@ -124,25 +124,29 @@ function ChatUI() {
             socket.emit('sendMessage', messageData);
             setNewMessage('');
 
+            const tempMessage = {
+                sender: currentUser._id,
+                receiver: selectedConversation._id,
+                content: newMessage.trim(),
+                timestamp: new Date().toISOString(),
+            };
+            setMessages(prevMessages => [...prevMessages, tempMessage]);
+
             if (messageUserId) {
-                navigate("/user/messages");
+                navigate('/user/messages');
             }
         }
-    };
+    }, [newMessage, selectedConversation, currentUser, navigate, messageUserId]);
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-gray-100 font-inter overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen bg-gray-100 font-sans">
             {/* Left Panel: Conversations List */}
             <div className={`
-                w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col shadow-lg
-                ${selectedConversation ? 'hidden md:flex' : 'flex'} 
-                h-full
-            `}>
-                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-center text-gray-800">Messaging</h2>
-                </div>
-
+        w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-200 flex flex-col shadow-lg
+        ${selectedConversation ? 'hidden md:flex' : 'flex'}
+        h-full`}>
                 <div className="p-4 border-b border-gray-200">
+                    <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">Messaging</h2>
                     <div className="relative">
                         <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
@@ -152,18 +156,15 @@ function ChatUI() {
                         />
                     </div>
                 </div>
-
                 <div className="flex-1 overflow-y-auto">
-                    {conversationsUsers.length === 0 ? (
+                    {conversations.length === 0 ? (
                         <p className="p-4 text-gray-500 text-center">No conversations found.</p>
                     ) : (
-                        conversationsUsers.map((conv) => (
+                        conversations.map((conv) => (
                             <div
                                 key={conv._id}
-                                className={`
-                                    flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50
-                                    ${selectedConversation?._id === conv._id ? 'bg-blue-50 border-l-4 border-blue-600' : ''}
-                                `}
+                                className={`flex items-center p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${selectedConversation?._id === conv._id ? 'bg-blue-50 border-l-4 border-blue-600' : ''}
+                `}
                                 onClick={() => setSelectedConversation(conv)}
                             >
                                 <div className="relative flex-shrink-0">
@@ -187,17 +188,16 @@ function ChatUI() {
 
             {/* Right Panel: Chat Messages */}
             <div className={`
-                flex-1 flex flex-col bg-white shadow-lg rounded-r-lg md:rounded-l-none
-                ${selectedConversation ? 'flex' : 'hidden md:flex'}
-                h-full
-            `}>
+        flex-1 flex flex-col bg-white shadow-lg md:rounded-l-none
+        ${selectedConversation ? 'flex' : 'hidden md:flex'}
+        h-max-full h-min-fit`}>
                 {selectedConversation ? (
                     <>
                         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                             <div className="flex items-center">
-                                <button 
+                                <button
                                     className="md:hidden mr-3 text-gray-600 hover:text-gray-900"
-                                    onClick={() => setSelectedConversation(null)} // Back button for mobile
+                                    onClick={() => setSelectedConversation(null)}
                                 >
                                     &larr;
                                 </button>
@@ -214,7 +214,7 @@ function ChatUI() {
                             </div>
                         </div>
 
-                        <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50">
+                        <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50 scrollbar-hide">
                             {messages.map((msg, index) => (
                                 <div
                                     key={index}
@@ -222,8 +222,8 @@ function ChatUI() {
                                 >
                                     <div
                                         className={`max-w-xs sm:max-w-sm md:max-w-md px-4 py-2 rounded-lg shadow ${msg.sender === currentUser._id
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-300 text-gray-800'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-300 text-gray-800'
                                             }`}
                                     >
                                         <p>{msg.content}</p>
@@ -246,7 +246,8 @@ function ChatUI() {
                             />
                             <button
                                 type="submit"
-                                className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400"
+                                disabled={!newMessage.trim()}
                             >
                                 <Send size={20} />
                             </button>

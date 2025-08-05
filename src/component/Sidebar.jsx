@@ -92,7 +92,7 @@ function Sidebar({ mobile }) {
             <aside
                 className={`${
                     mobile
-                        ? `fixed top-0 left-0 h-full w-64 bg-white z-40 shadow-xl transform transition-transform duration-300 ${
+                        ? `fixed top-0 left-0 h-full w-64 bg-white z-40 shadow-xl rounded transform transition-transform duration-300 ${
                             isOpen ? 'translate-x-0' : '-translate-x-full'
                         } md:hidden`
                         : `hidden md:flex md:flex-col md:items-center md:w-20 md:h-full md:bg-white md:shadow-lg`
