@@ -8,16 +8,60 @@ import TopGigs from '../component/home/TopGigs';
 import PopularFreelancer from '../component/home/PopularFreelancer';
 import Footer from '../component/Footer';
 import { toast } from 'react-toastify';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import filterData from '../utils/gigCoreData.json';
+import Swal from 'sweetalert2';
+
+const useAuthCheck = () => {
+    const navigate = useNavigate();
+    const userId = localStorage.getItem('userId');
+
+    const showLoginPopup = () => {
+        Swal.fire({
+            title: 'Not logged in!',
+            text: 'You need to be logged in to view this page. Would you like to log in now?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Login',
+            cancelButtonText: 'No',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                navigate('/login');
+            }
+        });
+    };
+
+    const checkAndNavigate = (path) => {
+        if (!userId) {
+            showLoginPopup();
+        } else {
+            navigate(path);
+        }
+    };
+
+    return { isUserLoggedIn: !!userId, checkAndNavigate, showLoginPopup };
+};
+
+const debounce = (func, delay) => {
+    let timeout;
+    return function (...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+};
 
 function Home() {
-    const navigate = useNavigate();
+    const location = useLocation();
+    const { checkAndNavigate, showLoginPopup } = useAuthCheck();
     const [currentUser, setCurrentUser] = useState(null);
     const [popularUsers, setPopularUsers] = useState([]);
     const [popularGig, setPopularGig] = useState([]);
     const [exploringGig, setExploringGig] = useState([]);
     const [filteredGigsData, setFilteredGigsData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const userId = localStorage.getItem('userId');
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -58,15 +102,7 @@ function Home() {
         setShowFilters(prevState => !prevState);
     };
 
-    const debounce = (func, delay) => {
-        let timeout;
-        return function (...args) {
-            const context = this;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(context, args), delay);
-        };
-    };
-
+    // Universal Search with debounce
     const performUniversalSearch = useCallback(
         debounce(async (query) => {
             if (query.length === 0) {
@@ -89,7 +125,7 @@ function Home() {
                 });
             } catch (error) {
                 toast.error('Failed to fetch search results.');
-                console.warn(error)
+                console.warn(error);
             } finally {
                 setIsSearching(false);
             }
@@ -123,11 +159,11 @@ function Home() {
         setSearchTerm(e.target.value);
     };
 
-    const handleSearchResultClick = (path) => {
-        navigate(path);
-        setSearchTerm('');
-        setSearchResults(null);
-    };
+    // const handleSearchResultClick = (path) => {
+    //     checkAndNavigate(path);
+    //     setSearchTerm('');
+    //     setSearchResults(null);
+    // };
 
     useEffect(() => {
         const { mainCategory, priceRange } = selectedFilters;
@@ -150,8 +186,10 @@ function Home() {
         setFilteredGigsData(tempFilteredGigs);
     }, [selectedFilters, exploringGig]);
 
+    // Initial data fetch
     useEffect(() => {
         const fetchData = async () => {
+            setIsLoading(true);
             try {
                 const [userRes, gigsRes, usersRes] = await Promise.all([
                     userId ? api.get(`api/auth/${userId}`) : Promise.resolve(null),
@@ -176,16 +214,44 @@ function Home() {
                 if (usersRes) {
                     setPopularUsers(usersRes.data.slice(0, 20));
                 }
-
             } catch (err) {
-                console.error('Error fetching data:', err);
                 toast.error('Failed to load data.');
+                console.warn(err);
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchData();
     }, [userId]);
 
+    // **Corrected useEffect to show popup on URL change**
+    const firstLoad = useRef(true);
+    useEffect(() => {
+        if (firstLoad.current) {
+            firstLoad.current = false;
+            return;
+        }
+
+        if (!userId) {
+            showLoginPopup();
+        }
+    }, [location.pathname]);
+
+
     const isFilterActive = selectedFilters.mainCategory || selectedFilters.priceRange;
+    const gigsToDisplay = isFilterActive ? filteredGigsData : exploringGig;
+    const popularGigsToDisplay = isFilterActive ? filteredGigsData : popularGig;
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-100">
+                <svg className="animate-spin h-10 w-10 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-100 font-sans antialiased">
@@ -200,7 +266,7 @@ function Home() {
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-800 to-blue-900 opacity-75 rounded-b-lg"></div>
                 <div className="relative z-10 flex justify-between items-start">
                     <h1 className="text-white text-3xl md:text-4xl font-bold">
-                        Welcome back, {currentUser?.username}
+                        Welcome back, {currentUser?.username || 'Guest'}
                         {currentUser?.userRole === 'freelancer' && (
                             <small className="text-xs">
                                 ({currentUser?.DomainDetail?.[0]?.freelancerDomain})
@@ -220,7 +286,7 @@ function Home() {
                 </div>
 
                 <div
-                    className="relative flex items-center w-full rounded-md shadow-sm md:hidden"
+                    className="relative flex items-center w-full rounded-md shadow-sm md:hidden mt-4"
                     ref={searchInputRef}
                 >
                     <input
@@ -280,11 +346,10 @@ function Home() {
                                             Gigs
                                         </p>
                                         {searchResults.gigs.map((gig) => (
-                                            <Link
+                                            <div
                                                 key={gig._id}
-                                                to={`/view-gig/${gig._id}`}
-                                                className="flex items-center px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 transition duration-150 ease-in-out"
-                                                onClick={() => handleSearchResultClick(`/view-gig/${gig._id}`)}
+                                                className="flex items-center px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 transition duration-150 ease-in-out cursor-pointer"
+                                                onClick={() => checkAndNavigate(`/view-gig/${gig._id}`)}
                                             >
                                                 <img
                                                     src={gig.cover || 'https://placehold.co/40x40/DDDDDD/666666?text=Gig'}
@@ -295,7 +360,7 @@ function Home() {
                                                     <p className="font-medium">{gig.title}</p>
                                                     <p className="text-gray-500 text-xs">${gig.price} by {gig.userId?.username}</p>
                                                 </div>
-                                            </Link>
+                                            </div>
                                         ))}
                                     </div>
                                 )}
@@ -306,11 +371,10 @@ function Home() {
                                             Freelancers
                                         </p>
                                         {searchResults.users.map((userItem) => (
-                                            <Link
+                                            <div
                                                 key={userItem._id}
-                                                to={`/view-user-profile/${userItem._id}`}
-                                                className="flex items-center px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 transition duration-150 ease-in-out"
-                                                onClick={() => handleSearchResultClick(`/view-user-profile/${userItem._id}`)}
+                                                className="flex items-center px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 transition duration-150 ease-in-out cursor-pointer"
+                                                onClick={() => checkAndNavigate(`/view-user-profile/${userItem._id}`)}
                                             >
                                                 <img
                                                     src={userItem.profilePicture || 'https://placehold.co/40x40/CCCCCC/666666?text=User'}
@@ -323,7 +387,7 @@ function Home() {
                                                         {userItem.DomainDetail?.[0]?.freelancerDomain}
                                                     </p>
                                                 </div>
-                                            </Link>
+                                            </div>
                                         ))}
                                     </div>
                                 )}
@@ -334,11 +398,10 @@ function Home() {
                                             Orders
                                         </p>
                                         {searchResults.orders.map((order) => (
-                                            <Link
+                                            <div
                                                 key={order._id}
-                                                to={`/order/${order._id}`}
-                                                className="flex items-center px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 transition duration-150 ease-in-out"
-                                                onClick={() => handleSearchResultClick(`/order/${order._id}`)}
+                                                className="flex items-center px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 transition duration-150 ease-in-out cursor-pointer"
+                                                onClick={() => checkAndNavigate(`/order/${order._id}`)}
                                             >
                                                 <img
                                                     src={order.gigId?.cover || 'https://placehold.co/40x40/DDDDDD/666666?text=Order'}
@@ -351,7 +414,7 @@ function Home() {
                                                         Status: {order.status} | Client: {order.clientId?.username}
                                                     </p>
                                                 </div>
-                                            </Link>
+                                            </div>
                                         ))}
                                     </div>
                                 )}
@@ -427,19 +490,9 @@ function Home() {
                 </div>
 
                 <div className={`w-full ${showFilters ? 'md:w-4/5' : 'md:w-full'}`}>
-                    {isFilterActive ? (
-                        <>
-                            <KeepExploring exploringGig={filteredGigsData} />
-                            <TopGigs popularGig={filteredGigsData} />
-                            <PopularFreelancer popularUsers={popularUsers} />
-                        </>
-                    ) : (
-                        <>
-                            <KeepExploring exploringGig={exploringGig} />
-                            <PopularFreelancer popularUsers={popularUsers} />
-                            <TopGigs popularGig={popularGig} />
-                        </>
-                    )}
+                    <KeepExploring exploringGig={gigsToDisplay} />
+                    <PopularFreelancer popularUsers={popularUsers} />
+                    <TopGigs popularGig={popularGigsToDisplay} />
                 </div>
             </div>
             <Footer />

@@ -11,7 +11,7 @@ import {
     ChevronDown,
     Home,
 } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 import api from '../utils/api';
@@ -19,6 +19,7 @@ import api from '../utils/api';
 function Sidebar({ mobile }) {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const [userId, setUserId] = useState(localStorage.getItem('userId'));
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
     const [userRole, setUserRole] = useState(null);
@@ -36,7 +37,7 @@ function Sidebar({ mobile }) {
             if (result.isConfirmed) {
                 localStorage.clear();
                 toast.success('Logged out successfully!');
-                navigate('/login');
+                navigate('/');
             }
         });
     };
@@ -53,14 +54,12 @@ function Sidebar({ mobile }) {
             }
         };
         fetchUserRole();
-
-        const handleStorageChange = () => {
-            setUserId(localStorage.getItem('userId'));
-            setIsLoggedIn(!!localStorage.getItem('token'));
-        };
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
     }, [userId]);
+
+    useEffect(() => {
+        setUserId(localStorage.getItem('userId'));
+        setIsLoggedIn(!!localStorage.getItem('token'));
+    }, [location.pathname]);
 
     const commonLinks = [
         { name: 'Home', path: '/', icon: <Home className="w-6 h-6" /> },
@@ -142,7 +141,7 @@ function Sidebar({ mobile }) {
                     onClick={() => setIsOpen(!isOpen)}
                     className="fixed bottom-6 left-6 md:hidden bg-indigo-600 text-white p-3 rounded-full shadow-lg z-50"
                 >
-                    {isOpen ? <ChevronDown className="w-6 h-6" /> : <ChevronUp className="w-6 h-6" />}
+                    {isOpen ? <ChevronUp className="w-6 h-6" /> : <ChevronDown className="w-6 h-6" />}
                 </button>
             )}
 

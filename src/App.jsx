@@ -55,7 +55,6 @@ function App() {
           <div className="px-4 md:pl-[80px]">
             <Routes>
               <Route element={<ProtectRoute />}>
-                <Route path="/" element={<Home />} />
                 <Route path="/my-dashboard" element={<Dashboard />} />
                 <Route path="/profile/:userId" element={<Profile />} />
                 <Route path="/details" element={<Details />} />
@@ -74,9 +73,10 @@ function App() {
                 <Route path="/add-order/:gigId" element={<CreateOrder />} />
               </Route>
 
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgetpassword" element={<ForgetPassword />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgetpassword" element={<ForgetPassword />} />
               <Route path="*" element={<PageNotFound />} />
             </Routes>
           </div>
